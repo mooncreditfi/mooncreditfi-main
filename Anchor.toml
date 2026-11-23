@@ -2,13 +2,13 @@
 anchor_version = "0.30.1"
 
 [features]
-seeds = false
+resolution = true
 skip-lint = false
 
-[programs.localnet]
-mooncreditfi = "63kZobzncBdUMQDPpqLG7YJSwkWNzKQCdgohGMaPAf1T"
-
 [programs.devnet]
+mooncreditfi = "36wX8Revk73R6ZVgBiSNzUTCHjN1F8gW4bcmjR6hoZkX"
+
+[programs.localnet]
 mooncreditfi = "63kZobzncBdUMQDPpqLG7YJSwkWNzKQCdgohGMaPAf1T"
 
 [registry]
