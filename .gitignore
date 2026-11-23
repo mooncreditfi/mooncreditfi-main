@@ -1,0 +1,10 @@
+target/
+node_modules/
+.anchor/
+.env
+.env.*
+.DS_Store
+*.key
+*.json
+!package.json
+!tsconfig.json
