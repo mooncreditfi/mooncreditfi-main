@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getMoonCreditProfile } from "@/lib/account-profile";
 import { SOLANA_NETWORK } from "@/lib/platform-capabilities";
+import { createSolanaSignInMessage } from "@/lib/solana-sign-in-message";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -87,20 +88,23 @@ export function WalletConnectButtonClient({ onAuthenticated }: WalletConnectProp
     }
     setBusy(true);
     try {
+      const statement =
+        "Sign in to MoonCreditFi. This signature does not authorize a blockchain transaction.";
+      const url = new URL(window.location.href);
+      const message = createSolanaSignInMessage({
+        domain: url.host,
+        uri: url.origin,
+        address,
+        statement,
+        chainId: `solana:${SOLANA_NETWORK}`,
+        nonce: crypto.randomUUID().replace(/-/g, ""),
+        issuedAt: new Date().toISOString(),
+      });
+      const signature = await walletState.signMessage(new TextEncoder().encode(message));
       const { data, error } = await supabase.auth.signInWithWeb3({
         chain: "solana",
-        statement:
-          "Sign in to MoonCreditFi. This signature does not authorize a blockchain transaction.",
-        wallet: {
-          publicKey: walletState.publicKey,
-          signMessage: walletState.signMessage,
-        },
-        options: {
-          signInWithSolana: {
-            chainId: `solana:${SOLANA_NETWORK}`,
-            nonce: crypto.randomUUID().replace(/-/g, ""),
-          },
-        },
+        message,
+        signature,
       });
       if (error) throw error;
       if (!data.session || !data.user) {
