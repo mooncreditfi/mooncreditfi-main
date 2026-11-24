@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1672 941" role="img" aria-labelledby="title description">
+  <title id="title">MoonCreditFi financing dashboard</title>
+  <desc id="description">Illustrative violet finance dashboard with gold Solana-inspired coins and a glowing architectural crescent.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#26144f"/>
+      <stop offset=".55" stop-color="#15102f"/>
+      <stop offset="1" stop-color="#090817"/>
+    </linearGradient>
+    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b78cff"/>
+      <stop offset=".5" stop-color="#7d4de1"/>
+      <stop offset="1" stop-color="#4a2a91"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff1a8"/>
+      <stop offset=".5" stop-color="#e8b84b"/>
+      <stop offset="1" stop-color="#9d681c"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity=".04"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#9d72ff" stop-opacity=".38"/>
+      <stop offset=".55" stop-color="#633bb7" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#1a1235" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="18"/></filter>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#05030d" flood-opacity=".55"/>
+    </filter>
+  </defs>
+  <rect width="1672" height="941" fill="url(#bg)" rx="36"/>
+  <ellipse cx="1010" cy="470" rx="620" ry="430" fill="url(#glow)"/>
+  <g opacity=".32" fill="none" stroke="#8060bd" stroke-width="2">
+    <circle cx="1010" cy="470" r="330"/>
+    <circle cx="1010" cy="470" r="390"/>
+    <circle cx="1010" cy="470" r="450"/>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="410" y="150" width="920" height="610" rx="28" fill="#17132d" stroke="#74559a" stroke-opacity=".55" stroke-width="2"/>
+    <rect x="410" y="150" width="920" height="78" rx="28" fill="url(#glass)"/>
+    <circle cx="458" cy="189" r="8" fill="#e6b956"/>
+    <circle cx="486" cy="189" r="8" fill="#8060bd"/>
+    <circle cx="514" cy="189" r="8" fill="#8060bd"/>
+    <rect x="450" y="270" width="245" height="170" rx="18" fill="#21193c" stroke="#7a5b9f" stroke-opacity=".45"/>
+    <rect x="726" y="270" width="245" height="170" rx="18" fill="#21193c" stroke="#7a5b9f" stroke-opacity=".45"/>
+    <rect x="1002" y="270" width="288" height="170" rx="18" fill="#21193c" stroke="#7a5b9f" stroke-opacity=".45"/>
+    <text x="480" y="310" fill="#a99cbc" font-family="Arial,sans-serif" font-size="18">TOTAL FUNDING</text>
+    <text x="480" y="382" fill="#fff" font-family="Arial,sans-serif" font-size="38" font-weight="700">$1.84M</text>
+    <text x="756" y="310" fill="#a99cbc" font-family="Arial,sans-serif" font-size="18">ACTIVE POOLS</text>
+    <text x="756" y="382" fill="#fff" font-family="Arial,sans-serif" font-size="38" font-weight="700">12</text>
+    <text x="1032" y="310" fill="#a99cbc" font-family="Arial,sans-serif" font-size="18">SHARED PROFIT</text>
+    <text x="1032" y="382" fill="#edc66a" font-family="Arial,sans-serif" font-size="38" font-weight="700">18.6%</text>
+    <rect x="450" y="472" width="840" height="238" rx="18" fill="#1d1734" stroke="#7a5b9f" stroke-opacity=".38"/>
+    <path d="M500 650 C620 610 650 575 740 592 C830 610 866 520 950 548 C1038 578 1090 505 1240 530" fill="none" stroke="url(#violet)" stroke-width="12" stroke-linecap="round"/>
+    <path d="M500 650 C620 610 650 575 740 592 C830 610 866 520 950 548 C1038 578 1090 505 1240 530 L1240 672 L500 672 Z" fill="url(#violet)" opacity=".12"/>
+    <g stroke="#8060bd" stroke-opacity=".18">
+      <path d="M500 535 H1240"/><path d="M500 590 H1240"/><path d="M500 645 H1240"/>
+    </g>
+  </g>
+  <g filter="url(#shadow)">
+    <ellipse cx="300" cy="430" rx="150" ry="150" fill="#241746" stroke="#9a7ac8" stroke-opacity=".5" stroke-width="3"/>
+    <ellipse cx="300" cy="430" rx="116" ry="116" fill="url(#gold)" opacity=".96"/>
+    <ellipse cx="300" cy="430" rx="90" ry="90" fill="#d49c37" stroke="#ffeab0" stroke-opacity=".75" stroke-width="4"/>
+    <path d="M255 405 H345 L329 421 H271 Z M255 431 H345 L329 447 H271 Z M255 457 H345 L329 473 H271 Z" fill="#fff0ad" opacity=".92"/>
+  </g>
+  <g filter="url(#shadow)">
+    <ellipse cx="1370" cy="590" rx="112" ry="112" fill="#241746" stroke="#9a7ac8" stroke-opacity=".5" stroke-width="3"/>
+    <ellipse cx="1370" cy="590" rx="82" ry="82" fill="url(#gold)"/>
+    <ellipse cx="1370" cy="590" rx="62" ry="62" fill="#d49c37" stroke="#ffeab0" stroke-opacity=".75" stroke-width="3"/>
+  </g>
+  <path d="M930 760 C830 700 806 606 858 535 C906 470 1005 468 1058 528 C1121 598 1084 710 975 770 C1055 718 1122 630 1108 530 C1094 430 1002 354 900 370 C780 389 708 512 742 630 C760 695 840 744 930 760Z" fill="url(#violet)" opacity=".78"/>
+  <path d="M900 702 C825 648 826 554 879 502 C925 457 1004 467 1040 520 C1082 582 1050 662 978 700 C1028 654 1044 574 1004 527 C962 478 875 512 857 578 C844 626 862 675 900 702Z" fill="#d3b9ff" opacity=".42"/>
+</svg>
