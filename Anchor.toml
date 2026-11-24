@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-mooncreditfi = "36wX8Revk73R6ZVgBiSNzUTCHjN1F8gW4bcmjR6hoZkX"
+mooncreditfi = "6LVAYFDRrTHSiHZqMWr4tybZNRi755HsoHgeku985pYx"
 
 [programs.localnet]
 mooncreditfi = "63kZobzncBdUMQDPpqLG7YJSwkWNzKQCdgohGMaPAf1T"

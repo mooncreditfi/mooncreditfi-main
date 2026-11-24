@@ -1,31 +1,35 @@
-import { describe, expect, it } from 'vitest';
-import { executePoolOperation, getReputationSignal, MOONCREDIT_PROGRAM_ID, platformCapabilities, SOLANA_NETWORK, type PoolOperation } from '@/lib/platform-capabilities';
-import { getMoonCreditProgramReadiness, moonCreditProgramId } from '@/lib/mooncredit-program';
+import { describe, expect, it } from "vitest";
+import {
+  getReputationSignal,
+  MOONCREDIT_PROGRAM_ID,
+  MOONCREDIT_USDC_MINT,
+  platformCapabilities,
+  SOLANA_NETWORK,
+} from "@/lib/platform-capabilities";
+import { getMoonCreditProgramReadiness, moonCreditProgramId } from "@/lib/mooncredit-program";
 
-describe('Financial integration boundaries', () => {
-  it('uses Solana Devnet for the initial environment', () => {
-    expect(SOLANA_NETWORK).toBe('devnet');
+describe("Financial integration boundaries", () => {
+  it("uses Solana Devnet for the initial environment", () => {
+    expect(SOLANA_NETWORK).toBe("devnet");
   });
-  it('uses the confirmed MoonCreditFi Devnet program ID', () => {
-    expect(MOONCREDIT_PROGRAM_ID).toBe('6LVAYFDRrTHSiHZqMWr4tybZNRi755HsoHgeku985pYx');
+  it("uses the confirmed MoonCreditFi Devnet program ID", () => {
+    expect(MOONCREDIT_PROGRAM_ID).toBe("6LVAYFDRrTHSiHZqMWr4tybZNRi755HsoHgeku985pYx");
     expect(moonCreditProgramId.toBase58()).toBe(MOONCREDIT_PROGRAM_ID);
   });
-  it('requires deployed mint verification before enabling contract operations', () => {
-    expect(getMoonCreditProgramReadiness()).toEqual({
-      ready: false,
-      reason: 'A verified deployed USDC mint is required before contract transactions can be enabled.',
-    });
+  it("uses the Devnet USDC mint configured by the deployed program", () => {
+    expect(MOONCREDIT_USDC_MINT).toBe("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
   });
-  it('enables native Supabase Web3 authentication', () => {
+  it("enables supported pool operations only for the matching Anchor IDL", () => {
+    expect(getMoonCreditProgramReadiness()).toEqual({ ready: true });
+    expect(platformCapabilities.contractTransactions).toBe(true);
+  });
+  it("enables native Supabase Web3 authentication", () => {
     expect(platformCapabilities.walletAuthentication).toBe(true);
   });
-  it.each<PoolOperation>(['create', 'contribute', 'activate', 'disburse', 'settle', 'claim', 'refund'])('never simulates a successful %s operation', async operation => {
-    await expect(executePoolOperation(operation)).rejects.toThrow('unavailable');
-  });
-  it('never invents CredLayer reputation data', () => {
+  it("never invents CredLayer reputation data", () => {
     expect(getReputationSignal()).toBeNull();
   });
-  it('blocks confidential document intake before secure processing exists', () => {
+  it("blocks confidential document intake before secure processing exists", () => {
     expect(platformCapabilities.documentIntake).toBe(false);
   });
 });

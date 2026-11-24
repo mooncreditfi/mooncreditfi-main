@@ -3,7 +3,7 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount, TransferChecked};
 
 // Replace this ID by running `anchor keys sync` after the first build.
 // The generated keypair must remain private and must never be committed.
-declare_id!("36wX8Revk73R6ZVgBiSNzUTCHjN1F8gW4bcmjR6hoZkX");
+declare_id!("6LVAYFDRrTHSiHZqMWr4tybZNRi755HsoHgeku985pYx");
 
 const CONFIG_SEED: &[u8] = b"config";
 const ENTREPRENEUR_SEED: &[u8] = b"entrepreneur";

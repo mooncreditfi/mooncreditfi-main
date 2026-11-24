@@ -1,5 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type ComponentType, type FormEvent, type ReactNode } from "react";
+import { createClientOnlyFn } from "@tanstack/react-start";
+import { useWalletRuntimeReady } from "@/components/wallet/wallet-runtime-context";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -26,6 +28,11 @@ import {
   type MoonCreditProfile,
   type MoonCreditRole,
 } from "@/lib/account-profile";
+
+const loadClientPools = createClientOnlyFn(async () => {
+  await import("@/lib/solana-buffer");
+  return import("./pools-content.client");
+});
 
 export function Workspace({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -202,7 +209,7 @@ export function Workspace({ children }: { children: ReactNode }) {
         <main className="workspace-main">{children}</main>
         <footer className="workspace-footer">
           MoonCreditFi · Ethical finance. Earned trust.
-          <span>No live financial operations are enabled.</span>
+          <span>Pool transactions are wallet-confirmed and Devnet-only.</span>
         </footer>
       </div>
     </div>
@@ -576,38 +583,37 @@ export function OpportunitiesContent() {
 }
 
 export function PoolsContent() {
+  const [ClientPools, setClientPools] = useState<ComponentType | null>(null);
+  const walletRuntimeReady = useWalletRuntimeReady();
+
+  useEffect(() => {
+    if (!walletRuntimeReady) return;
+    let active = true;
+    void loadClientPools()
+      .then((module) => {
+        if (active) setClientPools(() => module.PoolsContentClient);
+      })
+      .catch((error) => console.error("Could not load pool operations.", error));
+    return () => {
+      active = false;
+    };
+  }, [walletRuntimeReady]);
+
+  if (ClientPools) return <ClientPools />;
   return (
     <Workspace>
       <WorkspaceTitle
         eyebrow="PROFIT SHARING"
         title="Mudarabah pools"
-        description="Pool operations are unavailable."
+        description="Loading live Solana Devnet pool data."
       />
-      <div className="workspace-section-heading">
-        <h2>Pool activity</h2>
-        <span>Devnet</span>
-      </div>
-      <div className="workspace-empty">
+      <div className="workspace-empty" aria-live="polite">
         <div className="icon-tile">
           <Handshake />
         </div>
-        <h2>Smart contract not configured</h2>
-        <p>Pool creation, funding and claims are disabled.</p>
-        <div className="flex flex-wrap justify-center gap-3">
-          <Button variant="gold" disabled>
-            <Handshake />
-            Create pool
-          </Button>
-          <Button variant="quiet" disabled>
-            <Wallet />
-            Contribute USDC
-          </Button>
-        </div>
+        <h2>Connecting to Solana Devnet</h2>
+        <p>Pool and proposal records are loaded directly from the MoonCreditFi program.</p>
       </div>
-      <p className="risk-note">
-        <CircleAlert />
-        No program ID or USDC mint is configured. No transactions will be sent.
-      </p>
     </Workspace>
   );
 }
