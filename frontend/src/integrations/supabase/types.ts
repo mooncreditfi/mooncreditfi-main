@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      mooncredit_profiles: {
+        Row: {
+          city: string
+          country: string
+          created_at: string
+          email: string
+          full_name: string
+          phone: string
+          profile_image: string | null
+          roles: string[]
+          updated_at: string
+          user_id: string
+          wallet_address: string | null
+        }
+        Insert: {
+          city: string
+          country: string
+          created_at?: string
+          email: string
+          full_name: string
+          phone: string
+          profile_image?: string | null
+          roles?: string[]
+          updated_at?: string
+          user_id: string
+          wallet_address?: string | null
+        }
+        Update: {
+          city?: string
+          country?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          phone?: string
+          profile_image?: string | null
+          roles?: string[]
+          updated_at?: string
+          user_id?: string
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
       readiness_assessments: {
         Row: {
           business_name: string

@@ -1,4 +1,5 @@
 export const SOLANA_NETWORK = 'devnet' as const;
+export const MOONCREDIT_PROGRAM_ID = '6LVAYFDRrTHSiHZqMWr4tybZNRi755HsoHgeku985pYx';
 
 // No program ID, IDL, mint or reputation score is fabricated as a fallback.
 export const platformCapabilities = {

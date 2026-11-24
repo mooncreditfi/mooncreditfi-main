@@ -30,5 +30,19 @@ export async function saveMoonCreditProfile(profile: MoonCreditProfile) {
     },
   });
   if (error) throw error;
+  const { error: profileError } = await supabase.from('mooncredit_profiles').upsert(
+    {
+      user_id: data.user.id,
+      full_name: profile.full_name,
+      email: profile.email,
+      phone: profile.phone,
+      country: profile.country,
+      city: profile.city,
+      profile_image: profile.profile_image ?? null,
+      roles: profile.roles,
+    },
+    { onConflict: 'user_id' },
+  );
+  if (profileError) throw profileError;
   return data.user;
 }
