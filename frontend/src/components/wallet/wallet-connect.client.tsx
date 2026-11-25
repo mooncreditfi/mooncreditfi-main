@@ -20,6 +20,7 @@ import {
 
 type WalletConnectProps = {
   onAuthenticated?: () => void;
+  requireAuthentication?: boolean;
 };
 
 const walletLinks: Record<string, string> = {
@@ -49,7 +50,10 @@ function errorText(error: unknown) {
   return message || "Wallet request failed. Please retry.";
 }
 
-export function WalletConnectButtonClient({ onAuthenticated }: WalletConnectProps) {
+export function WalletConnectButtonClient({
+  onAuthenticated,
+  requireAuthentication = true,
+}: WalletConnectProps) {
   const navigate = useNavigate();
   const walletState = useWallet();
   const { wallets, wallet, publicKey, connected, connecting, select, connect, disconnect } =
@@ -182,10 +186,17 @@ export function WalletConnectButtonClient({ onAuthenticated }: WalletConnectProp
           >
             {copied ? <Check /> : <Copy />}
           </Button>
-          <Button type="button" variant="gold" disabled={busy} onClick={() => void authenticate()}>
-            {busy ? <Loader2 className="animate-spin" /> : <WalletIcon />}
-            {busy ? "Authenticating…" : "Sign in"}
-          </Button>
+          {requireAuthentication && (
+            <Button
+              type="button"
+              variant="gold"
+              disabled={busy}
+              onClick={() => void authenticate()}
+            >
+              {busy ? <Loader2 className="animate-spin" /> : <WalletIcon />}
+              {busy ? "Authenticating…" : "Sign in"}
+            </Button>
+          )}
           <Button
             type="button"
             variant="quiet"

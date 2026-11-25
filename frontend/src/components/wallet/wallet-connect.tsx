@@ -6,9 +6,15 @@ import { useWalletRuntimeReady } from "./wallet-runtime-context";
 
 const loadWalletConnect = createClientOnlyFn(() => import("./wallet-connect.client"));
 
-export function WalletConnectButton() {
+type WalletConnectButtonProps = {
+  requireAuthentication?: boolean;
+};
+
+export function WalletConnectButton({ requireAuthentication = true }: WalletConnectButtonProps) {
   const ready = useWalletRuntimeReady();
-  const [ClientButton, setClientButton] = useState<ComponentType | null>(null);
+  const [ClientButton, setClientButton] = useState<ComponentType<WalletConnectButtonProps> | null>(
+    null,
+  );
   const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
@@ -27,7 +33,7 @@ export function WalletConnectButton() {
     };
   }, [ready]);
 
-  if (ClientButton) return <ClientButton />;
+  if (ClientButton) return <ClientButton requireAuthentication={requireAuthentication} />;
   return (
     <Button type="button" variant="gold" disabled>
       {loadFailed ? <Wallet /> : <Loader2 className="animate-spin" />}

@@ -8,7 +8,7 @@ export const Route = createFileRoute("/entrepreneur")({
   head: () =>
     pageMetadata(
       "Entrepreneur Dashboard",
-      "MoonCreditFi entrepreneur workspace for businesses, private documents, funding proposals and business reports. Account access is pending activation.",
+      "Manage your entrepreneur profile, funding proposal status and on-chain pool activity.",
     ),
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();

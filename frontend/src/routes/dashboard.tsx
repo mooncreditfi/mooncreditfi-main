@@ -9,7 +9,7 @@ export const Route = createFileRoute("/dashboard")({
   head: () =>
     pageMetadata(
       "Investor Dashboard",
-      "MoonCreditFi investor workspace for investment positions, transactions and account settings. Account access is pending activation.",
+      "Track investment positions, verified pool activity, profile details and account settings.",
     ),
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();

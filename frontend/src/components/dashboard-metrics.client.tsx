@@ -36,7 +36,7 @@ export function DashboardMetrics({ entrepreneur }: { entrepreneur: boolean }) {
         <p>
           Live {entrepreneur ? "proposal" : "portfolio"} metrics are read from {SOLANA_NETWORK}.
         </p>
-        <WalletConnectButton />
+        <WalletConnectButton requireAuthentication={false} />
       </div>
     );
   }

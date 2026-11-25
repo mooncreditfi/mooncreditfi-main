@@ -3,7 +3,6 @@ import { useEffect, useState, type ComponentType, type FormEvent, type ReactNode
 import { createClientOnlyFn } from "@tanstack/react-start";
 import { useWalletRuntimeReady } from "@/components/wallet/wallet-runtime-context";
 import {
-  ArrowRight,
   ArrowUpRight,
   Building2,
   CircleAlert,
@@ -15,7 +14,6 @@ import {
   Menu,
   Search,
   ShieldCheck,
-  Wallet,
   X,
 } from "lucide-react";
 import { SiSolana } from "react-icons/si";
@@ -57,6 +55,7 @@ export function Workspace({ children }: { children: ReactNode }) {
   const [AuthorityAdminLink, setAuthorityAdminLink] = useState<ComponentType | null>(null);
   const location = useLocation();
   const walletRuntimeReady = useWalletRuntimeReady();
+  const navigationRoles: MoonCreditRole[] = signedIn ? roles : ["investor", "entrepreneur"];
   useEffect(() => {
     const {
       data: { subscription },
@@ -96,64 +95,56 @@ export function Workspace({ children }: { children: ReactNode }) {
             MoonCredit<em>Fi</em>
           </span>
         </Link>
-        <p className="workspace-nav-label">WORKSPACE</p>
-        <nav aria-label="Application navigation" onClick={() => setOpen(false)}>
-          {roles.includes("investor") && (
-            <Link
-              to="/dashboard"
-              search={{ view: "overview" }}
-              className={location.pathname === "/dashboard" ? "selected" : ""}
-            >
-              <LayoutDashboard />
-              Investor
+        <nav
+          className="workspace-nav"
+          aria-label="Application navigation"
+          onClick={() => setOpen(false)}
+        >
+          <div className="workspace-nav-group">
+            <p className="workspace-nav-group-label">YOUR WORKSPACES</p>
+            {navigationRoles.map((role) =>
+              role === "investor" ? (
+                <Link
+                  key={role}
+                  to="/dashboard"
+                  search={{ view: "overview" }}
+                  className={location.pathname === "/dashboard" ? "selected" : ""}
+                >
+                  <LayoutDashboard />
+                  Investor
+                </Link>
+              ) : (
+                <Link
+                  key={role}
+                  to="/entrepreneur"
+                  search={{ view: "overview" }}
+                  className={location.pathname === "/entrepreneur" ? "selected" : ""}
+                >
+                  <Building2 />
+                  Entrepreneur
+                </Link>
+              ),
+            )}
+          </div>
+          <div className="workspace-nav-group">
+            <p className="workspace-nav-group-label">EXPLORE</p>
+            <Link to="/readiness" className={location.pathname === "/readiness" ? "selected" : ""}>
+              <FileCheck2 />
+              Readiness
             </Link>
-          )}
-          {roles.includes("entrepreneur") && (
             <Link
-              to="/entrepreneur"
-              search={{ view: "overview" }}
-              className={location.pathname === "/entrepreneur" ? "selected" : ""}
+              to="/opportunities"
+              className={location.pathname === "/opportunities" ? "selected" : ""}
             >
-              <Building2 />
-              Entrepreneur
+              <Search />
+              Opportunities
             </Link>
-          )}
-          {!signedIn && (
-            <>
-              <Link
-                to="/dashboard"
-                search={{ view: "overview" }}
-                className={location.pathname === "/dashboard" ? "selected" : ""}
-              >
-                <LayoutDashboard />
-                Investor
-              </Link>
-              <Link
-                to="/entrepreneur"
-                search={{ view: "overview" }}
-                className={location.pathname === "/entrepreneur" ? "selected" : ""}
-              >
-                <Building2 />
-                Entrepreneur
-              </Link>
-            </>
-          )}
-          <Link to="/readiness" className={location.pathname === "/readiness" ? "selected" : ""}>
-            <FileCheck2 />
-            Readiness
-          </Link>
-          <Link
-            to="/opportunities"
-            className={location.pathname === "/opportunities" ? "selected" : ""}
-          >
-            <Search />
-            Opportunities
-          </Link>
-          <Link to="/pools" className={location.pathname === "/pools" ? "selected" : ""}>
-            <Handshake />
-            Pools
-          </Link>
-          {AuthorityAdminLink && <AuthorityAdminLink />}
+            <Link to="/pools" className={location.pathname === "/pools" ? "selected" : ""}>
+              <Handshake />
+              Pools
+            </Link>
+            {AuthorityAdminLink && <AuthorityAdminLink />}
+          </div>
         </nav>
         <div className="workspace-sidebar-bottom">
           <ShieldCheck />
@@ -189,45 +180,17 @@ export function Workspace({ children }: { children: ReactNode }) {
               <SiSolana className="network-badge-icon" aria-hidden="true" />
               Solana Devnet
             </span>
-            {roles.length > 1 && (
-              <div className="workspace-role-switcher" aria-label="Role switcher">
-                {roles.map((role) =>
-                  role === "entrepreneur" ? (
-                    <Link
-                      key={role}
-                      to="/entrepreneur"
-                      search={{ view: "overview" }}
-                      className={location.pathname === "/entrepreneur" ? "selected" : ""}
-                    >
-                      Entrepreneur
-                    </Link>
-                  ) : (
-                    <Link
-                      key={role}
-                      to="/dashboard"
-                      search={{ view: "overview" }}
-                      className={location.pathname === "/dashboard" ? "selected" : ""}
-                    >
-                      Investor
-                    </Link>
-                  ),
-                )}
-              </div>
-            )}
           </div>
           {signedIn ? (
             <Button variant="wallet" onClick={() => void signOut()}>
               <LogOut />
               Sign out
             </Button>
-          ) : (
+          ) : location.pathname !== "/auth" ? (
             <Button asChild variant="wallet">
-              <Link to="/auth">
-                <Wallet />
-                Sign in
-              </Link>
+              <Link to="/auth">Sign in</Link>
             </Button>
-          )}
+          ) : null}
         </header>
         <div className="workspace-network-note">
           <CircleAlert size={14} />
@@ -250,14 +213,16 @@ export function WorkspaceTitle({
   title,
   description,
   children,
+  className,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   children?: ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="workspace-title">
+    <div className={`workspace-title ${className ?? ""}`.trim()}>
       <div>
         <p className="eyebrow">{eyebrow}</p>
         <h1>{title}</h1>
@@ -276,18 +241,12 @@ export function AccountGate({
   description?: string;
 }) {
   return (
-    <div className="workspace-empty">
+    <div className="workspace-empty account-gate">
       <div className="icon-tile">
         <LockKeyhole />
       </div>
       <h2>{title}</h2>
       <p>{description}</p>
-      <Button asChild variant="gold">
-        <Link to="/auth">
-          Account access
-          <ArrowRight />
-        </Link>
-      </Button>
     </div>
   );
 }
@@ -345,7 +304,7 @@ function AccountProfileView() {
     return (
       <AccountGate
         title="Complete your profile"
-        description="Sign in and complete onboarding before role and profile settings can be loaded."
+        description="Finish account setup before editing your profile and workspace roles."
       />
     );
 
@@ -499,6 +458,7 @@ export function DashboardContent({
             ? "Your businesses, proposals and live funding activity."
             : "Your investment positions and verified pool activity."
         }
+        className="workspace-dashboard-title"
       />
       <div
         className="workspace-tabs"
@@ -508,8 +468,10 @@ export function DashboardContent({
         {views.map((item) => (
           <Button
             key={item}
+            id={`workspace-tab-${viewKey(item)}`}
             role="tab"
             aria-selected={item === current}
+            aria-controls="workspace-view-panel"
             variant="nav"
             className={item === current ? "selected" : ""}
             onClick={() => onViewChange(viewKey(item))}
@@ -518,68 +480,76 @@ export function DashboardContent({
           </Button>
         ))}
       </div>
-      {current === "Overview" ? (
-        <>
-          <div className="workspace-metrics" aria-live="polite">
-            {LiveDashboardMetrics ? (
-              <LiveDashboardMetrics entrepreneur={entrepreneur} />
-            ) : (
-              <p>Loading live wallet metrics…</p>
-            )}
-          </div>
-          <div className="workspace-section-heading">
-            <h2>{entrepreneur ? "Business activity" : "Portfolio activity"}</h2>
-            <span>Current chain state</span>
-          </div>
-          <div className="workspace-empty workspace-activity-note">
-            <CircleAlert aria-hidden="true" />
-            <h2>Transaction history is not indexed</h2>
-            <p>
-              Portfolio totals above reflect current Solana account state. This deployment does not
-              yet index wallet transaction history or settlement events.
-            </p>
-            <Button asChild variant="quiet">
-              <Link to="/pools">
-                Review pool records <ArrowUpRight />
+      <section
+        className="workspace-view-panel"
+        id="workspace-view-panel"
+        role="tabpanel"
+        aria-labelledby={`workspace-tab-${viewKey(current)}`}
+        tabIndex={0}
+      >
+        {current === "Overview" ? (
+          <>
+            <div className="workspace-metrics" aria-live="polite">
+              {LiveDashboardMetrics ? (
+                <LiveDashboardMetrics entrepreneur={entrepreneur} />
+              ) : (
+                <p>Loading live wallet metrics…</p>
+              )}
+            </div>
+            <div className="workspace-section-heading">
+              <h2>{entrepreneur ? "Business activity" : "Portfolio activity"}</h2>
+              <span>Current chain state</span>
+            </div>
+            <div className="workspace-empty workspace-activity-note">
+              <CircleAlert aria-hidden="true" />
+              <h2>Transaction history is not indexed</h2>
+              <p>
+                Portfolio totals above reflect current Solana account state. This deployment does
+                not yet index wallet transaction history or settlement events.
+              </p>
+              <Button asChild variant="quiet">
+                <Link to="/pools">
+                  Review pool records <ArrowUpRight />
+                </Link>
+              </Button>
+            </div>
+            <div className="workspace-paths">
+              <Link to="/opportunities">
+                <div className="icon-tile">
+                  <Search />
+                </div>
+                <div>
+                  <h3>Opportunities</h3>
+                  <p>Business profiles and terms.</p>
+                </div>
+                <ArrowUpRight />
               </Link>
-            </Button>
-          </div>
-          <div className="workspace-paths">
-            <Link to="/opportunities">
-              <div className="icon-tile">
-                <Search />
-              </div>
-              <div>
-                <h3>Opportunities</h3>
-                <p>Business profiles and terms.</p>
-              </div>
-              <ArrowUpRight />
-            </Link>
-            <Link to="/pools">
-              <div className="icon-tile">
-                <Handshake />
-              </div>
-              <div>
-                <h3>Pools</h3>
-                <p>Profit sharing and risk.</p>
-              </div>
-              <ArrowUpRight />
-            </Link>
-          </div>
-        </>
-      ) : current === "Profile" || current === "Settings" ? (
-        <AccountProfileView />
-      ) : current === "Business Documents" ? (
-        <AccountGate
-          title="Document upload unavailable"
-          description="Secure storage is not configured."
-        />
-      ) : (
-        <AccountGate
-          title={`${current} unavailable`}
-          description="Required backend or blockchain integrations are not configured. No data is fabricated."
-        />
-      )}
+              <Link to="/pools">
+                <div className="icon-tile">
+                  <Handshake />
+                </div>
+                <div>
+                  <h3>Pools</h3>
+                  <p>Profit sharing and risk.</p>
+                </div>
+                <ArrowUpRight />
+              </Link>
+            </div>
+          </>
+        ) : current === "Profile" || current === "Settings" ? (
+          <AccountProfileView />
+        ) : current === "Business Documents" ? (
+          <AccountGate
+            title="Document upload unavailable"
+            description="Secure storage is not configured."
+          />
+        ) : (
+          <AccountGate
+            title={`${current} unavailable`}
+            description="Required backend or blockchain integrations are not configured. No data is fabricated."
+          />
+        )}
+      </section>
     </Workspace>
   );
 }

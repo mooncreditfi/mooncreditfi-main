@@ -24,7 +24,6 @@ import {
   ShieldCheck,
   Wallet,
 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -206,7 +205,7 @@ export function PoolsContentClient() {
   async function submitProposal(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!publicKey || !anchorWallet) {
-      toast.error("Sign in with Solana and connect your wallet to submit a proposal.");
+      toast.error("Connect a Solana wallet to submit a proposal.");
       return;
     }
     if (!entrepreneurRole) {
@@ -329,7 +328,7 @@ export function PoolsContentClient() {
 
   async function contribute(pool: LivePool) {
     if (!publicKey || !anchorWallet) {
-      toast.error("Sign in with Solana and connect your wallet to contribute.");
+      toast.error("Connect a Solana wallet to contribute.");
       return;
     }
     const input = contributionAmounts[pool.publicKey.toBase58()] ?? "";
@@ -966,13 +965,10 @@ export function PoolsContentClient() {
             </div>
             <h2>Entrepreneur role required</h2>
             <p>
-              Sign in with Solana, then select the entrepreneur role in your profile. The role does
-              not approve proposals automatically.
+              Enable Entrepreneur in your account profile. One wallet sign-in applies to every role
+              on your profile; proposal approval still requires the platform admin.
             </p>
             {profileError && <p role="alert">{profileError}</p>}
-            <Button asChild variant="quiet">
-              <Link to="/auth">Sign in with Solana</Link>
-            </Button>
           </div>
         ) : (
           <div className="onboarding-layout proposal-layout">
