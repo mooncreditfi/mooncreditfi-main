@@ -45,4 +45,24 @@ describe("MoonCreditFi", () => {
       usdcMint.toString()
     );
   });
+
+  it("transfers platform authority to the specified wallet", async () => {
+    const program = pg.program;
+    const [configPda] = web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("config")],
+      program.programId
+    );
+    const newAuthority = web3.Keypair.generate().publicKey;
+
+    await program.methods
+      .transferPlatformAuthority(newAuthority)
+      .accounts({
+        config: configPda,
+        authority: pg.wallet.publicKey,
+      })
+      .rpc();
+
+    const config = await program.account.platformConfig.fetch(configPda);
+    assert.equal(config.authority.toString(), newAuthority.toString());
+  });
 });

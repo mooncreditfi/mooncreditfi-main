@@ -16,7 +16,7 @@ This crate implements MoonCreditFi's Mudarabah-style funding lifecycle as a Sola
 
 The program ID is declared in `src/lib.rs` and configured under `[programs.devnet]` in the repository's `Anchor.toml`. The Anchor provider defaults to Localnet, so explicitly select Devnet for Devnet CLI operations.
 
-The first `initialize_platform` call creates the singleton configuration PDA and pins the authority and six-decimal mint. The instruction does not restrict who initializes it: whichever signer initializes the PDA first becomes the authority and chooses the mint. Initialize from the intended authority before exposing the deployment. There is no instruction to rotate the authority or change the configured mint.
+The first `initialize_platform` call creates the singleton configuration PDA and pins the authority and six-decimal mint. The instruction does not restrict who initializes it: whichever signer initializes the PDA first becomes the authority and chooses the mint. Initialize from the intended authority before exposing the deployment. The current platform authority can transfer authority with `transfer_platform_authority`; the new authority address should be verified before signing because the transfer takes effect immediately.
 
 ## Funding lifecycle
 
@@ -37,6 +37,7 @@ The platform authority can cancel pools while they are `Open` or `Funded`. Inves
 | Instruction | Authorization and behavior |
 | --- | --- |
 | `initialize_platform` | Any initializing authority signer creates the one-time config; requires a six-decimal mint. |
+| `transfer_platform_authority` | The current platform authority immediately transfers authority to a non-default, different public key. |
 | `register_entrepreneur` | The entrepreneur signer creates their profile. |
 | `create_proposal` | A registered entrepreneur creates a proposal; profit share must be 0–10,000 bps. |
 | `approve_proposal` | The configured platform authority approves a proposal once. |
@@ -97,7 +98,7 @@ Never commit or share the deployment keypair, a wallet private key, or a seed ph
 
 ## Security and scope limitations
 
-- The platform uses a single authority key for proposal approval, settlement approval, disbursement authorization, and cancellation; no multisig or authority rotation is implemented.
+- The platform uses a single authority key for proposal approval, settlement approval, disbursement authorization, and cancellation. Authority transfer requires the current authority's signature; no multisig is implemented.
 - `business_id` is an opaque 32-byte identifier. The contract stores no business description, evidence, identity verification, or legal agreement.
 - Settlement values are supplied by the entrepreneur and approved by the authority. The contract cannot verify business performance, actual profit or loss, fraud, negligence, or Sharia compliance.
 - No funding expiry, emergency pause, dispute process, Token-2022 support, or dust-recovery mechanism is implemented.

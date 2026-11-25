@@ -32,6 +32,30 @@ pub mod mooncreditfi {
         Ok(())
     }
 
+    pub fn transfer_platform_authority(
+        ctx: Context<TransferPlatformAuthority>,
+        new_authority: Pubkey,
+    ) -> Result<()> {
+        require_keys_eq!(
+            ctx.accounts.config.authority,
+            ctx.accounts.authority.key(),
+            MoonCreditError::Unauthorized
+        );
+        require!(new_authority != Pubkey::default(), MoonCreditError::InvalidAuthority);
+        require!(
+            new_authority != ctx.accounts.config.authority,
+            MoonCreditError::AuthorityUnchanged
+        );
+
+        let previous_authority = ctx.accounts.config.authority;
+        ctx.accounts.config.authority = new_authority;
+        emit!(PlatformAuthorityChanged {
+            previous_authority,
+            new_authority,
+        });
+        Ok(())
+    }
+
     pub fn register_entrepreneur(ctx: Context<RegisterEntrepreneur>) -> Result<()> {
         let profile = &mut ctx.accounts.entrepreneur_profile;
         profile.owner = ctx.accounts.entrepreneur.key();
@@ -413,6 +437,13 @@ pub struct InitializePlatform<'info> {
 }
 
 #[derive(Accounts)]
+pub struct TransferPlatformAuthority<'info> {
+    #[account(mut, seeds = [CONFIG_SEED], bump = config.bump)]
+    pub config: Account<'info, PlatformConfig>,
+    pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
 pub struct RegisterEntrepreneur<'info> {
     #[account(
         init,
@@ -762,6 +793,8 @@ pub enum PoolStatus {
 #[event]
 pub struct PlatformInitialized { pub authority: Pubkey, pub usdc_mint: Pubkey }
 #[event]
+pub struct PlatformAuthorityChanged { pub previous_authority: Pubkey, pub new_authority: Pubkey }
+#[event]
 pub struct EntrepreneurRegistered { pub entrepreneur: Pubkey }
 #[event]
 pub struct ProposalCreated { pub proposal: Pubkey, pub entrepreneur: Pubkey, pub funding_goal: u64, pub entrepreneur_profit_bps: u16 }
@@ -822,4 +855,8 @@ pub enum MoonCreditError {
     InvestorClaimsPending,
     #[msg("The supplied vault is invalid.")]
     InvalidVault,
+    #[msg("The new authority address cannot be the default address.")]
+    InvalidAuthority,
+    #[msg("The new authority must be different from the current authority.")]
+    AuthorityUnchanged,
 }
