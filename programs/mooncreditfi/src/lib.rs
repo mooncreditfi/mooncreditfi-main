@@ -8,6 +8,7 @@ declare_id!("6LVAYFDRrTHSiHZqMWr4tybZNRi755HsoHgeku985pYx");
 const CONFIG_SEED: &[u8] = b"config";
 const ENTREPRENEUR_SEED: &[u8] = b"entrepreneur";
 const PROPOSAL_SEED: &[u8] = b"proposal";
+const REJECTION_SEED: &[u8] = b"rejection";
 const POOL_SEED: &[u8] = b"pool";
 const VAULT_SEED: &[u8] = b"vault";
 const POSITION_SEED: &[u8] = b"position";
@@ -70,6 +71,22 @@ pub mod mooncreditfi {
         require!(!ctx.accounts.proposal.approved, MoonCreditError::AlreadyApproved);
         ctx.accounts.proposal.approved = true;
         emit!(ProposalApproved { proposal: ctx.accounts.proposal.key() });
+        Ok(())
+    }
+
+    pub fn reject_proposal(ctx: Context<RejectProposal>) -> Result<()> {
+        require_keys_eq!(ctx.accounts.config.authority, ctx.accounts.authority.key(), MoonCreditError::Unauthorized);
+        require!(!ctx.accounts.proposal.approved, MoonCreditError::AlreadyApproved);
+
+        let rejection = &mut ctx.accounts.rejection;
+        rejection.proposal = ctx.accounts.proposal.key();
+        rejection.authority = ctx.accounts.authority.key();
+        rejection.bump = ctx.bumps.rejection;
+
+        emit!(ProposalRejected {
+            proposal: rejection.proposal,
+            authority: rejection.authority,
+        });
         Ok(())
     }
 
@@ -438,7 +455,35 @@ pub struct ApproveProposal<'info> {
     pub config: Account<'info, PlatformConfig>,
     #[account(mut)]
     pub proposal: Account<'info, BusinessProposal>,
+    #[account(
+        seeds = [REJECTION_SEED, proposal.key().as_ref()],
+        bump,
+        constraint = rejection.data_is_empty() @ MoonCreditError::ProposalRejected
+    )]
+    pub rejection: UncheckedAccount<'info>,
     pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct RejectProposal<'info> {
+    #[account(seeds = [CONFIG_SEED], bump = config.bump)]
+    pub config: Account<'info, PlatformConfig>,
+    #[account(
+        seeds = [PROPOSAL_SEED, proposal.entrepreneur.as_ref(), proposal.business_id.as_ref()],
+        bump = proposal.bump
+    )]
+    pub proposal: Account<'info, BusinessProposal>,
+    #[account(
+        init,
+        payer = authority,
+        space = 8 + ProposalRejection::INIT_SPACE,
+        seeds = [REJECTION_SEED, proposal.key().as_ref()],
+        bump
+    )]
+    pub rejection: Account<'info, ProposalRejection>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -450,6 +495,12 @@ pub struct CreatePool<'info> {
         bump = proposal.bump
     )]
     pub proposal: Account<'info, BusinessProposal>,
+    #[account(
+        seeds = [REJECTION_SEED, proposal.key().as_ref()],
+        bump,
+        constraint = rejection.data_is_empty() @ MoonCreditError::ProposalRejected
+    )]
+    pub rejection: UncheckedAccount<'info>,
     #[account(
         init,
         payer = entrepreneur,
@@ -654,6 +705,14 @@ pub struct BusinessProposal {
 
 #[account]
 #[derive(InitSpace)]
+pub struct ProposalRejection {
+    pub proposal: Pubkey,
+    pub authority: Pubkey,
+    pub bump: u8,
+}
+
+#[account]
+#[derive(InitSpace)]
 pub struct MudarabahPool {
     pub proposal: Pubkey,
     pub entrepreneur: Pubkey,
@@ -709,6 +768,8 @@ pub struct ProposalCreated { pub proposal: Pubkey, pub entrepreneur: Pubkey, pub
 #[event]
 pub struct ProposalApproved { pub proposal: Pubkey }
 #[event]
+pub struct ProposalRejected { pub proposal: Pubkey, pub authority: Pubkey }
+#[event]
 pub struct PoolCreated { pub pool: Pubkey, pub proposal: Pubkey, pub entrepreneur: Pubkey, pub funding_goal: u64 }
 #[event]
 pub struct ContributionMade { pub pool: Pubkey, pub investor: Pubkey, pub amount: u64, pub investor_total: u64, pub pool_total: u64 }
@@ -747,6 +808,8 @@ pub enum MoonCreditError {
     AlreadyApproved,
     #[msg("The proposal has not been approved.")]
     ProposalNotApproved,
+    #[msg("The proposal has been rejected.")]
+    ProposalRejected,
     #[msg("The pool is not in the required state.")]
     InvalidPoolStatus,
     #[msg("The contribution would exceed the funding goal.")]

@@ -9,9 +9,11 @@ const encoder = new TextEncoder();
 export const CONFIG_SEED = encoder.encode("config");
 export const ENTREPRENEUR_SEED = encoder.encode("entrepreneur");
 export const PROPOSAL_SEED = encoder.encode("proposal");
+export const REJECTION_SEED = encoder.encode("rejection");
 export const POOL_SEED = encoder.encode("pool");
 export const VAULT_SEED = encoder.encode("vault");
 export const POSITION_SEED = encoder.encode("position");
+export const SETTLEMENT_SEED = encoder.encode("settlement");
 
 export type MoonCreditProgramReadiness = { ready: true } | { ready: false; reason: string };
 

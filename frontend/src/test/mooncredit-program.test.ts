@@ -10,9 +10,16 @@ describe("MoonCreditFi Anchor client", () => {
     });
 
     expect(typeof Reflect.get(program.methods, "createProposal")).toBe("function");
+    expect(typeof Reflect.get(program.methods, "rejectProposal")).toBe("function");
     expect(typeof Reflect.get(program.methods, "createPool")).toBe("function");
     expect(typeof Reflect.get(program.methods, "contribute")).toBe("function");
     expect(Reflect.get(program.account, "mudarabahPool")).toBeDefined();
+    expect(Reflect.get(program.account, "proposalRejection")).toBeDefined();
+    expect(
+      moonCreditIdl.instructions
+        .find((instruction) => instruction.name === "createPool")
+        ?.accounts.map((account) => account.name),
+    ).toContain("rejection");
     const platformConfig = moonCreditIdl.accounts.find(
       (account) => account.name === "platformConfig",
     );

@@ -113,9 +113,46 @@ const idl = {
           signer: false,
         },
         {
+          name: "rejection",
+          writable: false,
+          signer: false,
+        },
+        {
           name: "authority",
           writable: false,
           signer: true,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "rejectProposal",
+      discriminator: [114, 162, 164, 82, 191, 11, 102, 25],
+      accounts: [
+        {
+          name: "config",
+          writable: false,
+          signer: false,
+        },
+        {
+          name: "proposal",
+          writable: false,
+          signer: false,
+        },
+        {
+          name: "rejection",
+          writable: true,
+          signer: false,
+        },
+        {
+          name: "authority",
+          writable: true,
+          signer: true,
+        },
+        {
+          name: "systemProgram",
+          writable: false,
+          signer: false,
         },
       ],
       args: [],
@@ -131,6 +168,11 @@ const idl = {
         },
         {
           name: "proposal",
+          writable: false,
+          signer: false,
+        },
+        {
+          name: "rejection",
           writable: false,
           signer: false,
         },
@@ -525,6 +567,10 @@ const idl = {
       discriminator: [16, 221, 93, 159, 94, 141, 175, 20],
     },
     {
+      name: "proposalRejection",
+      discriminator: [138, 126, 251, 172, 61, 88, 62, 117],
+    },
+    {
       name: "mudarabahPool",
       discriminator: [139, 195, 198, 208, 225, 164, 51, 88],
     },
@@ -553,6 +599,10 @@ const idl = {
     {
       name: "proposalApproved",
       discriminator: [70, 49, 155, 228, 157, 43, 88, 49],
+    },
+    {
+      name: "proposalRejected",
+      discriminator: [77, 15, 161, 38, 240, 201, 24, 208],
     },
     {
       name: "poolCreated",
@@ -638,31 +688,36 @@ const idl = {
     },
     {
       code: 6008,
+      name: "proposalRejected",
+      msg: "The proposal has been rejected.",
+    },
+    {
+      code: 6009,
       name: "invalidPoolStatus",
       msg: "The pool is not in the required state.",
     },
     {
-      code: 6009,
+      code: 6010,
       name: "fundingGoalExceeded",
       msg: "The contribution would exceed the funding goal.",
     },
     {
-      code: 6010,
+      code: 6011,
       name: "fundingGoalNotReached",
       msg: "The pool has not reached its funding goal.",
     },
     {
-      code: 6011,
+      code: 6012,
       name: "alreadyClaimed",
       msg: "This investor has already claimed.",
     },
     {
-      code: 6012,
+      code: 6013,
       name: "investorClaimsPending",
       msg: "All investor claims must be completed first.",
     },
     {
-      code: 6013,
+      code: 6014,
       name: "invalidVault",
       msg: "The supplied vault is invalid.",
     },
@@ -730,6 +785,26 @@ const idl = {
           {
             name: "approved",
             type: "bool",
+          },
+          {
+            name: "bump",
+            type: "u8",
+          },
+        ],
+      },
+    },
+    {
+      name: "proposalRejection",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "proposal",
+            type: "pubkey",
+          },
+          {
+            name: "authority",
+            type: "pubkey",
           },
           {
             name: "bump",
@@ -950,6 +1025,24 @@ const idl = {
         fields: [
           {
             name: "proposal",
+            type: "pubkey",
+            index: false,
+          },
+        ],
+      },
+    },
+    {
+      name: "proposalRejected",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "proposal",
+            type: "pubkey",
+            index: false,
+          },
+          {
+            name: "authority",
             type: "pubkey",
             index: false,
           },

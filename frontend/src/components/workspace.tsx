@@ -34,12 +34,18 @@ const loadClientPools = createClientOnlyFn(async () => {
   await import("@/lib/solana-buffer");
   return import("./pools-content.client");
 });
+const loadClientAdmin = createClientOnlyFn(async () => {
+  await import("@/lib/solana-buffer");
+  return import("./admin-content.client");
+});
 
 export function Workspace({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const [roles, setRoles] = useState<MoonCreditRole[]>([]);
+  const [AuthorityAdminLink, setAuthorityAdminLink] = useState<ComponentType | null>(null);
   const location = useLocation();
+  const walletRuntimeReady = useWalletRuntimeReady();
   useEffect(() => {
     const {
       data: { subscription },
@@ -50,6 +56,18 @@ export function Workspace({ children }: { children: ReactNode }) {
     });
     return () => subscription.unsubscribe();
   }, []);
+  useEffect(() => {
+    if (!walletRuntimeReady) return;
+    let active = true;
+    void loadClientAdmin()
+      .then((module) => {
+        if (active) setAuthorityAdminLink(() => module.AuthorityAdminLink);
+      })
+      .catch((error) => console.error("Could not load admin navigation.", error));
+    return () => {
+      active = false;
+    };
+  }, [walletRuntimeReady]);
   async function signOut() {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -124,6 +142,7 @@ export function Workspace({ children }: { children: ReactNode }) {
             <Handshake />
             Pools
           </Link>
+          {AuthorityAdminLink && <AuthorityAdminLink />}
         </nav>
         <div className="workspace-sidebar-bottom">
           <ShieldCheck />

@@ -26,6 +26,7 @@ import {
   POOL_SEED,
   POSITION_SEED,
   PROPOSAL_SEED,
+  REJECTION_SEED,
   VAULT_SEED,
 } from "@/lib/mooncredit-program";
 import { parseUsdcAmount, validateContributionAmount } from "@/lib/pool-utils";
@@ -215,6 +216,10 @@ export function PoolsContentClient() {
         .accounts({
           config: PublicKey.findProgramAddressSync([CONFIG_SEED], moonCreditProgramId)[0],
           proposal: proposal.publicKey,
+          rejection: PublicKey.findProgramAddressSync(
+            [REJECTION_SEED, proposal.publicKey.toBuffer()],
+            moonCreditProgramId,
+          )[0],
           pool: poolAddress,
           vault: vaultAddress,
           usdcMint: moonCreditUsdcMint,

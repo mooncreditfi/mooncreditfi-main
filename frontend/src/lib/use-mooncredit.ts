@@ -1,4 +1,4 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import { getMint } from "@solana/spl-token";
 import { useAnchorWallet, useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useQuery } from "@tanstack/react-query";
@@ -10,6 +10,7 @@ import {
   moonCreditIdl,
   moonCreditProgramId,
   moonCreditUsdcMint,
+  SETTLEMENT_SEED,
 } from "@/lib/mooncredit-program";
 
 const readOnlyWallet = {
@@ -30,6 +31,9 @@ export const moonCreditQueryKeys = {
   positions: (wallet: PublicKey | null) =>
     ["mooncreditfi", "positions", wallet?.toBase58() ?? null] as const,
   config: ["mooncreditfi", "config"] as const,
+  adminProposals: (authority: PublicKey | null) =>
+    ["mooncreditfi", "admin", "proposals", authority?.toBase58() ?? null] as const,
+  adminSettlements: ["mooncreditfi", "admin", "settlements"] as const,
 };
 
 export function useProgram(): Program<Mooncreditfi> {
@@ -105,6 +109,69 @@ export function useConfig() {
         throw new Error("The configured Devnet USDC mint must use six decimal places.");
       }
       return config;
+    },
+    refetchInterval: 15_000,
+  });
+}
+
+export function useAdminProposals(authority: PublicKey | null) {
+  const program = useProgram();
+  return useQuery({
+    queryKey: moonCreditQueryKeys.adminProposals(authority),
+    enabled: authority !== null,
+    queryFn: async () => {
+      if (!authority) return [];
+      const [proposals, rejections] = await Promise.all([
+        program.account.businessProposal.all([
+          { memcmp: { offset: 8 + 32 + 32 + 8 + 2, bytes: "1" } },
+        ]),
+        program.account.proposalRejection.all([
+          { memcmp: { offset: 8 + 32, bytes: authority.toBase58() } },
+        ]),
+      ]);
+      const rejectedProposals = new Set(
+        rejections.map(({ account }) => account.proposal.toBase58()),
+      );
+      return proposals.filter(
+        ({ publicKey, account }) =>
+          !account.approved && !rejectedProposals.has(publicKey.toBase58()),
+      );
+    },
+    refetchInterval: 15_000,
+  });
+}
+
+export function useAdminSettlements(enabled = true) {
+  const program = useProgram();
+  const { connection } = useConnection();
+  return useQuery({
+    queryKey: moonCreditQueryKeys.adminSettlements,
+    enabled,
+    queryFn: async () => {
+      const pools = await program.account.mudarabahPool.all([
+        { memcmp: { offset: 8 + 32 * 4 + 8 * 3 + 2, bytes: "4" } },
+      ]);
+      return Promise.all(
+        pools.map(async (pool) => {
+          const settlementAddress = PublicKey.findProgramAddressSync(
+            [SETTLEMENT_SEED, pool.publicKey.toBuffer()],
+            moonCreditProgramId,
+          )[0];
+          const [settlement, vaultBalance] = await Promise.all([
+            program.account.settlementRecord.fetchNullable(settlementAddress),
+            connection.getTokenAccountBalance(pool.account.vault, "confirmed"),
+          ]);
+          if (!settlement) {
+            throw new Error(`Settlement record is missing for pool ${pool.publicKey.toBase58()}.`);
+          }
+          return {
+            pool,
+            settlementAddress,
+            settlement,
+            vaultBalance: new BN(vaultBalance.value.amount),
+          };
+        }),
+      );
     },
     refetchInterval: 15_000,
   });
