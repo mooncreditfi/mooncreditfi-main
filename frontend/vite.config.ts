@@ -25,6 +25,9 @@ export default defineConfig({
     },
   ],
   vite: {
+    server: {
+      allowedHosts: ["sb-72at8zaph08p.vercel.run"],
+    },
     optimizeDeps: {
       esbuildOptions: {
         plugins: [
