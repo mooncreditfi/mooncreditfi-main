@@ -6,7 +6,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   Building2,
-  ChartNoAxesCombined,
   CircleAlert,
   FileCheck2,
   Handshake,
@@ -37,6 +36,14 @@ const loadClientPools = createClientOnlyFn(async () => {
 const loadClientAdmin = createClientOnlyFn(async () => {
   await import("@/lib/solana-buffer");
   return import("./admin-content.client");
+});
+const loadClientDashboard = createClientOnlyFn(async () => {
+  await import("@/lib/solana-buffer");
+  return import("./dashboard-metrics.client");
+});
+const loadClientOpportunities = createClientOnlyFn(async () => {
+  await import("@/lib/solana-buffer");
+  return import("./opportunities-content.client");
 });
 
 export function Workspace({ children }: { children: ReactNode }) {
@@ -459,9 +466,22 @@ export function DashboardContent({
 }) {
   const views = entrepreneur ? entrepreneurViews : investorViews;
   const current = views.find((item) => viewKey(item) === view) ?? "Overview";
-  const metrics = entrepreneur
-    ? ["Business verification", "Submitted proposals", "Active funding pools", "Capital received"]
-    : ["Contributed capital", "Active investments", "Completed investments", "Pending claims"];
+  const walletRuntimeReady = useWalletRuntimeReady();
+  const [LiveDashboardMetrics, setLiveDashboardMetrics] = useState<ComponentType<{
+    entrepreneur: boolean;
+  }> | null>(null);
+  useEffect(() => {
+    if (!walletRuntimeReady) return;
+    let active = true;
+    void loadClientDashboard()
+      .then((module) => {
+        if (active) setLiveDashboardMetrics(() => module.DashboardMetrics);
+      })
+      .catch((error) => console.error("Could not load live dashboard metrics.", error));
+    return () => {
+      active = false;
+    };
+  }, [walletRuntimeReady]);
   return (
     <Workspace>
       <WorkspaceTitle
@@ -474,7 +494,9 @@ export function DashboardContent({
             : current
         }
         description={
-          entrepreneur ? "Businesses, proposals and reports." : "Investments and transactions."
+          entrepreneur
+            ? "Your businesses, proposals and live funding activity."
+            : "Your investment positions and verified pool activity."
         }
       />
       <div
@@ -497,21 +519,30 @@ export function DashboardContent({
       </div>
       {current === "Overview" ? (
         <>
-          <div className="workspace-metrics">
-            {metrics.map((label, i) => (
-              <article key={label}>
-                <span>{label}</span>
-                {i === 0 ? <Wallet /> : <ChartNoAxesCombined />}
-                <strong>—</strong>
-                <small>No live records</small>
-              </article>
-            ))}
+          <div className="workspace-metrics" aria-live="polite">
+            {LiveDashboardMetrics ? (
+              <LiveDashboardMetrics entrepreneur={entrepreneur} />
+            ) : (
+              <p>Loading live wallet metrics…</p>
+            )}
           </div>
           <div className="workspace-section-heading">
             <h2>{entrepreneur ? "Business activity" : "Portfolio activity"}</h2>
-            <span>Private data</span>
+            <span>Current chain state</span>
           </div>
-          <AccountGate />
+          <div className="workspace-empty workspace-activity-note">
+            <CircleAlert aria-hidden="true" />
+            <h2>Transaction history is not indexed</h2>
+            <p>
+              Portfolio totals above reflect current Solana account state. This deployment does not
+              yet index wallet transaction history or settlement events.
+            </p>
+            <Button asChild variant="quiet">
+              <Link to="/pools">
+                Review pool records <ArrowUpRight />
+              </Link>
+            </Button>
+          </div>
           <div className="workspace-paths">
             <Link to="/opportunities">
               <div className="icon-tile">
@@ -558,46 +589,36 @@ export function DashboardContent({
 }
 
 export function OpportunitiesContent() {
+  const [ClientOpportunities, setClientOpportunities] = useState<ComponentType | null>(null);
+  const walletRuntimeReady = useWalletRuntimeReady();
+
+  useEffect(() => {
+    if (!walletRuntimeReady) return;
+    let active = true;
+    void loadClientOpportunities()
+      .then((module) => {
+        if (active) setClientOpportunities(() => module.OpportunitiesContentClient);
+      })
+      .catch((error) => console.error("Could not load live opportunities.", error));
+    return () => {
+      active = false;
+    };
+  }, [walletRuntimeReady]);
+
+  if (ClientOpportunities) return <ClientOpportunities />;
   return (
     <Workspace>
       <WorkspaceTitle
-        eyebrow="INVESTOR"
-        title="Opportunities"
-        description="Browse approved business funding."
+        eyebrow="INVESTOR WORKSPACE"
+        title="Funding opportunities"
+        description="Loading verified pool data from Solana Devnet."
       />
-      <div className="workspace-section-heading">
-        <h2>Open listings</h2>
-        <span>Unavailable</span>
-      </div>
-      <div className="workspace-empty">
+      <div className="workspace-empty" aria-live="polite">
         <div className="icon-tile">
-          <Building2 />
-        </div>
-        <h2>No open opportunities</h2>
-        <p>Approved listings are not available. Investments are disabled.</p>
-        <Button asChild variant="quiet">
-          <Link to="/entrepreneur" search={{ view: "my-businesses" }}>
-            Entrepreneur view
-            <ArrowRight />
-          </Link>
-        </Button>
-      </div>
-      <div className="workspace-principles">
-        <div>
-          <FileCheck2 />
-          <h3>Verified businesses</h3>
-          <p>Identity and business checks differ.</p>
-        </div>
-        <div>
           <Handshake />
-          <h3>Shared profit</h3>
-          <p>Review each pool’s terms.</p>
         </div>
-        <div>
-          <ShieldCheck />
-          <h3>Investment risk</h3>
-          <p>Returns are not guaranteed.</p>
-        </div>
+        <h2>Connecting to Solana Devnet</h2>
+        <p>Live pool and funding information is read directly from the MoonCreditFi program.</p>
       </div>
     </Workspace>
   );

@@ -5,7 +5,7 @@ export const Route = createFileRoute("/opportunities")({
   head: () =>
     pageMetadata(
       "Explore Opportunities",
-      "Explore MoonCreditFi business-financing opportunities and Mudarabah principles. Investment participation is not available yet.",
+      "Explore live MoonCreditFi Mudarabah pools and review funding progress directly from Solana Devnet.",
     ),
   component: OpportunitiesContent,
 });

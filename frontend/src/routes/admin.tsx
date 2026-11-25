@@ -41,8 +41,7 @@ function AdminRouteComponent() {
         eyebrow="PLATFORM ADMIN"
         title={loadError ? "Could not load admin operations" : "Connecting to Solana Devnet"}
         description={
-          loadError ??
-          "Verifying the connected wallet against the on-chain platform authority."
+          loadError ?? "Verifying the connected wallet against the on-chain platform authority."
         }
       />
     </Workspace>

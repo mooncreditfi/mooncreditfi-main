@@ -7,7 +7,7 @@ import {
 import { useAnchorWallet, useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction } from "@solana/web3.js";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { CircleAlert, ExternalLink, Handshake, RefreshCw, Wallet } from "lucide-react";
+import { CircleAlert, ExternalLink, Handshake, RefreshCw, Search, Wallet } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -37,6 +37,8 @@ import {
   usePools,
   useProgram,
   useProposals,
+  usePublicProposals,
+  useProposalRejections,
 } from "@/lib/use-mooncredit";
 import { txToast } from "@/lib/tx-toast";
 
@@ -71,12 +73,36 @@ export function PoolsContentClient() {
   const queryClient = useQueryClient();
   const poolsQuery = usePools();
   const proposalsQuery = useProposals();
+  const publicProposalsQuery = usePublicProposals();
+  const rejectionsQuery = useProposalRejections();
   const configQuery = useConfig();
   const pools = useMemo(() => poolsQuery.data ?? [], [poolsQuery.data]);
   const proposals = proposalsQuery.data ?? [];
-  const loadError = poolsQuery.error ?? proposalsQuery.error ?? configQuery.error;
+  const publicProposals = useMemo(
+    () => publicProposalsQuery.data ?? [],
+    [publicProposalsQuery.data],
+  );
+  const publicProposalByKey = useMemo(
+    () => new Map(publicProposals.map((proposal) => [proposal.publicKey.toBase58(), proposal])),
+    [publicProposals],
+  );
+  const rejectedProposalKeys = useMemo(
+    () => new Set((rejectionsQuery.data ?? []).map(({ account }) => account.proposal.toBase58())),
+    [rejectionsQuery.data],
+  );
+  const loadError =
+    poolsQuery.error ??
+    proposalsQuery.error ??
+    publicProposalsQuery.error ??
+    rejectionsQuery.error ??
+    configQuery.error;
   const error = loadError ? errorMessage(loadError) : "";
-  const loading = poolsQuery.isFetching || proposalsQuery.isFetching || configQuery.isFetching;
+  const loading =
+    poolsQuery.isFetching ||
+    proposalsQuery.isFetching ||
+    publicProposalsQuery.isFetching ||
+    rejectionsQuery.isFetching ||
+    configQuery.isFetching;
   const [busy, setBusy] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [recentSignature, setRecentSignature] = useState("");
@@ -84,9 +110,17 @@ export function PoolsContentClient() {
   const [fundingGoal, setFundingGoal] = useState("");
   const [entrepreneurProfitBps, setEntrepreneurProfitBps] = useState("2000");
   const [contributionAmounts, setContributionAmounts] = useState<Record<string, string>>({});
+  const [poolSearch, setPoolSearch] = useState("");
+  const [poolStatusFilter, setPoolStatusFilter] = useState("all");
 
   async function refresh() {
-    await Promise.all([poolsQuery.refetch(), proposalsQuery.refetch(), configQuery.refetch()]);
+    await Promise.all([
+      poolsQuery.refetch(),
+      proposalsQuery.refetch(),
+      publicProposalsQuery.refetch(),
+      rejectionsQuery.refetch(),
+      configQuery.refetch(),
+    ]);
   }
 
   useEffect(() => {
@@ -313,6 +347,19 @@ export function PoolsContentClient() {
     () => new Set(pools.map((pool) => pool.account.proposal.toBase58())),
     [pools],
   );
+  const visiblePools = useMemo(() => {
+    const query = poolSearch.trim().toLowerCase();
+    return pools.filter(({ publicKey, account }) => {
+      const status = statusName(account.status).toLowerCase();
+      const matchesStatus =
+        poolStatusFilter === "all" ||
+        (poolStatusFilter === "open" ? status === "open" : status !== "open");
+      const matchesSearch =
+        !query ||
+        `${publicKey.toBase58()} ${account.proposal.toBase58()}`.toLowerCase().includes(query);
+      return matchesStatus && matchesSearch;
+    });
+  }, [poolSearch, poolStatusFilter, pools]);
   const ownProposals = proposals;
   const readiness = getMoonCreditProgramReadiness();
 
@@ -400,20 +447,75 @@ export function PoolsContentClient() {
         </div>
       )}
       {!error && pools.length > 0 && (
+        <div className="opportunity-filters" role="search" aria-label="Filter live pools">
+          <label className="opportunity-search">
+            <Search aria-hidden="true" />
+            <span className="sr-only">Search pool or proposal address</span>
+            <Input
+              value={poolSearch}
+              onChange={(event) => setPoolSearch(event.target.value)}
+              placeholder="Search pool or proposal address"
+            />
+          </label>
+          <label className="opportunity-status">
+            <span className="sr-only">Pool status</span>
+            <select
+              value={poolStatusFilter}
+              onChange={(event) => setPoolStatusFilter(event.target.value)}
+            >
+              <option value="all">All statuses</option>
+              <option value="open">Open for funding</option>
+              <option value="closed">Not open</option>
+            </select>
+          </label>
+        </div>
+      )}
+      {!error && pools.length > 0 && visiblePools.length === 0 && (
+        <div className="workspace-empty">
+          <h2>No matching pools</h2>
+          <p>Try another address or status filter.</p>
+          <Button
+            type="button"
+            variant="quiet"
+            onClick={() => {
+              setPoolSearch("");
+              setPoolStatusFilter("all");
+            }}
+          >
+            Clear filters
+          </Button>
+        </div>
+      )}
+      {!error && visiblePools.length > 0 && (
         <section className="onboarding-layout" aria-label="Live pools">
-          {pools.map((pool) => {
+          {visiblePools.map((pool) => {
             const target = pool.account.fundingGoal;
             const raised = pool.account.totalContributed;
             const remaining = target.sub(raised);
-            const open =
-              statusName(pool.account.status).toLowerCase() === "open" && remaining.gt(new BN(0));
+            const status = statusName(pool.account.status);
+            const open = status.toLowerCase() === "open" && remaining.gt(new BN(0));
+            const progress = target.isZero()
+              ? 0
+              : Math.min(100, raised.mul(new BN(10_000)).div(target).toNumber() / 100);
+            const proposal = publicProposalByKey.get(pool.account.proposal.toBase58());
+            const profitShare = proposal
+              ? `${(proposal.account.entrepreneurProfitBps / 100).toFixed(2).replace(/\.?0+$/, "")}%`
+              : "Unavailable";
             const poolKey = pool.publicKey.toBase58();
             return (
               <article className="onboarding-card" key={poolKey}>
+                <div className="opportunity-card-top">
+                  <span className="eyebrow">LIVE ON-CHAIN POOL</span>
+                  <span className={`opportunity-status-badge ${open ? "is-open" : ""}`}>
+                    {status}
+                  </span>
+                </div>
                 <h2>Pool {shortKey(pool.publicKey)}</h2>
                 <p>
-                  Proposal {shortKey(pool.account.proposal)} · {statusName(pool.account.status)}
+                  Proposal {shortKey(pool.account.proposal)} · Entrepreneur{" "}
+                  {shortKey(pool.account.entrepreneur)}
                 </p>
+                <p>Entrepreneur profit share: {profitShare}</p>
                 <div className="workspace-metrics">
                   <article>
                     <span>Funding target</span>
@@ -435,6 +537,20 @@ export function PoolsContentClient() {
                     <strong>{pool.account.investorCount}</strong>
                     <small>on-chain</small>
                   </article>
+                </div>
+                <div className="opportunity-progress-label">
+                  <span>Funding progress</span>
+                  <span>{progress.toFixed(1)}%</span>
+                </div>
+                <div
+                  className="opportunity-progress"
+                  role="progressbar"
+                  aria-label={`Funding progress for pool ${shortKey(pool.publicKey)}`}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(progress)}
+                >
+                  <span style={{ width: `${progress}%` }} />
                 </div>
                 <label className="block space-y-2">
                   <span>Contribution amount (USDC)</span>
@@ -547,8 +663,16 @@ export function PoolsContentClient() {
                       <p>
                         {proposal.account.approved
                           ? "Approved by platform authority"
-                          : "Awaiting platform authority review"}
+                          : rejectedProposalKeys.has(key)
+                            ? "Rejected by platform authority"
+                            : "Awaiting platform authority review"}
                       </p>
+                      {rejectedProposalKeys.has(key) && (
+                        <p className="opportunity-disclosure">
+                          The program records rejection status but does not store review notes or
+                          revision instructions.
+                        </p>
+                      )}
                       {proposal.account.approved && !hasPool && (
                         <Button
                           type="button"
