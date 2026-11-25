@@ -1,6 +1,6 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 
-export type MoonCreditRole = 'entrepreneur' | 'investor';
+export type MoonCreditRole = "entrepreneur" | "investor";
 
 export type MoonCreditProfile = {
   full_name: string;
@@ -12,11 +12,21 @@ export type MoonCreditProfile = {
   roles: MoonCreditRole[];
 };
 
-export function getMoonCreditProfile(user: { user_metadata?: Record<string, unknown> } | null): MoonCreditProfile | null {
-  const savedProfile = user?.user_metadata?.['mooncredit_profile'];
-  if (!savedProfile || typeof savedProfile !== 'object') return null;
+export function getMoonCreditProfile(
+  user: { user_metadata?: Record<string, unknown> } | null,
+): MoonCreditProfile | null {
+  const savedProfile = user?.user_metadata?.["mooncredit_profile"];
+  if (!savedProfile || typeof savedProfile !== "object") return null;
   const profile = savedProfile as Partial<MoonCreditProfile>;
-  if (!profile.full_name || !profile.email || !profile.phone || !profile.country || !profile.city || !Array.isArray(profile.roles) || profile.roles.length === 0) {
+  if (
+    !profile.full_name ||
+    !profile.email ||
+    !profile.phone ||
+    !profile.country ||
+    !profile.city ||
+    !Array.isArray(profile.roles) ||
+    profile.roles.length === 0
+  ) {
     return null;
   }
   return profile as MoonCreditProfile;
@@ -30,7 +40,7 @@ export async function saveMoonCreditProfile(profile: MoonCreditProfile) {
     },
   });
   if (error) throw error;
-  const { error: profileError } = await supabase.from('mooncredit_profiles').upsert(
+  const { error: profileError } = await supabase.from("mooncredit_profiles").upsert(
     {
       user_id: data.user.id,
       full_name: profile.full_name,
@@ -41,7 +51,7 @@ export async function saveMoonCreditProfile(profile: MoonCreditProfile) {
       profile_image: profile.profile_image ?? null,
       roles: profile.roles,
     },
-    { onConflict: 'user_id' },
+    { onConflict: "user_id" },
   );
   if (profileError) throw profileError;
   return data.user;

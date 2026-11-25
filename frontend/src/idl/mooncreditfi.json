@@ -8,16 +8,7 @@
   "instructions": [
     {
       "name": "initializePlatform",
-      "discriminator": [
-        119,
-        201,
-        101,
-        45,
-        75,
-        122,
-        89,
-        3
-      ],
+      "discriminator": [119, 201, 101, 45, 75, 122, 89, 3],
       "accounts": [
         {
           "name": "config",
@@ -44,16 +35,7 @@
     },
     {
       "name": "registerEntrepreneur",
-      "discriminator": [
-        152,
-        27,
-        77,
-        154,
-        157,
-        165,
-        106,
-        63
-      ],
+      "discriminator": [152, 27, 77, 154, 157, 165, 106, 63],
       "accounts": [
         {
           "name": "entrepreneurProfile",
@@ -75,16 +57,7 @@
     },
     {
       "name": "createProposal",
-      "discriminator": [
-        132,
-        116,
-        68,
-        174,
-        216,
-        160,
-        198,
-        22
-      ],
+      "discriminator": [132, 116, 68, 174, 216, 160, 198, 22],
       "accounts": [
         {
           "name": "entrepreneurProfile",
@@ -111,10 +84,7 @@
         {
           "name": "businessId",
           "type": {
-            "array": [
-              "u8",
-              32
-            ]
+            "array": ["u8", 32]
           }
         },
         {
@@ -129,16 +99,7 @@
     },
     {
       "name": "approveProposal",
-      "discriminator": [
-        136,
-        108,
-        102,
-        85,
-        98,
-        114,
-        7,
-        147
-      ],
+      "discriminator": [136, 108, 102, 85, 98, 114, 7, 147],
       "accounts": [
         {
           "name": "config",
@@ -160,16 +121,7 @@
     },
     {
       "name": "createPool",
-      "discriminator": [
-        233,
-        146,
-        209,
-        142,
-        207,
-        104,
-        64,
-        188
-      ],
+      "discriminator": [233, 146, 209, 142, 207, 104, 64, 188],
       "accounts": [
         {
           "name": "config",
@@ -221,16 +173,7 @@
     },
     {
       "name": "contribute",
-      "discriminator": [
-        82,
-        33,
-        68,
-        131,
-        32,
-        0,
-        205,
-        95
-      ],
+      "discriminator": [82, 33, 68, 131, 32, 0, 205, 95],
       "accounts": [
         {
           "name": "pool",
@@ -282,16 +225,7 @@
     },
     {
       "name": "activatePool",
-      "discriminator": [
-        129,
-        125,
-        90,
-        174,
-        121,
-        169,
-        225,
-        239
-      ],
+      "discriminator": [129, 125, 90, 174, 121, 169, 225, 239],
       "accounts": [
         {
           "name": "pool",
@@ -308,16 +242,7 @@
     },
     {
       "name": "disburseCapital",
-      "discriminator": [
-        128,
-        6,
-        66,
-        243,
-        45,
-        65,
-        175,
-        207
-      ],
+      "discriminator": [128, 6, 66, 243, 45, 65, 175, 207],
       "accounts": [
         {
           "name": "config",
@@ -364,16 +289,7 @@
     },
     {
       "name": "submitSettlement",
-      "discriminator": [
-        255,
-        231,
-        47,
-        245,
-        40,
-        161,
-        95,
-        231
-      ],
+      "discriminator": [255, 231, 47, 245, 40, 161, 95, 231],
       "accounts": [
         {
           "name": "pool",
@@ -425,16 +341,7 @@
     },
     {
       "name": "approveSettlement",
-      "discriminator": [
-        186,
-        5,
-        15,
-        163,
-        23,
-        10,
-        142,
-        12
-      ],
+      "discriminator": [186, 5, 15, 163, 23, 10, 142, 12],
       "accounts": [
         {
           "name": "config",
@@ -461,16 +368,7 @@
     },
     {
       "name": "claimDistribution",
-      "discriminator": [
-        204,
-        156,
-        94,
-        85,
-        2,
-        125,
-        232,
-        180
-      ],
+      "discriminator": [204, 156, 94, 85, 2, 125, 232, 180],
       "accounts": [
         {
           "name": "pool",
@@ -512,16 +410,7 @@
     },
     {
       "name": "claimEntrepreneurProfit",
-      "discriminator": [
-        82,
-        239,
-        119,
-        7,
-        236,
-        148,
-        183,
-        36
-      ],
+      "discriminator": [82, 239, 119, 7, 236, 148, 183, 36],
       "accounts": [
         {
           "name": "pool",
@@ -558,16 +447,7 @@
     },
     {
       "name": "cancelPool",
-      "discriminator": [
-        211,
-        11,
-        27,
-        100,
-        252,
-        115,
-        57,
-        77
-      ],
+      "discriminator": [211, 11, 27, 100, 252, 115, 57, 77],
       "accounts": [
         {
           "name": "config",
@@ -589,16 +469,7 @@
     },
     {
       "name": "claimRefund",
-      "discriminator": [
-        15,
-        16,
-        30,
-        161,
-        255,
-        228,
-        97,
-        60
-      ],
+      "discriminator": [15, 16, 30, 161, 255, 228, 97, 60],
       "accounts": [
         {
           "name": "pool",
@@ -642,265 +513,85 @@
   "accounts": [
     {
       "name": "PlatformConfig",
-      "discriminator": [
-        160,
-        78,
-        128,
-        0,
-        248,
-        83,
-        230,
-        160
-      ]
+      "discriminator": [160, 78, 128, 0, 248, 83, 230, 160]
     },
     {
       "name": "EntrepreneurProfile",
-      "discriminator": [
-        62,
-        224,
-        5,
-        54,
-        102,
-        163,
-        113,
-        215
-      ]
+      "discriminator": [62, 224, 5, 54, 102, 163, 113, 215]
     },
     {
       "name": "BusinessProposal",
-      "discriminator": [
-        16,
-        221,
-        93,
-        159,
-        94,
-        141,
-        175,
-        20
-      ]
+      "discriminator": [16, 221, 93, 159, 94, 141, 175, 20]
     },
     {
       "name": "MudarabahPool",
-      "discriminator": [
-        139,
-        195,
-        198,
-        208,
-        225,
-        164,
-        51,
-        88
-      ]
+      "discriminator": [139, 195, 198, 208, 225, 164, 51, 88]
     },
     {
       "name": "InvestorPosition",
-      "discriminator": [
-        145,
-        143,
-        236,
-        150,
-        229,
-        40,
-        195,
-        88
-      ]
+      "discriminator": [145, 143, 236, 150, 229, 40, 195, 88]
     },
     {
       "name": "SettlementRecord",
-      "discriminator": [
-        172,
-        159,
-        67,
-        74,
-        96,
-        85,
-        37,
-        205
-      ]
+      "discriminator": [172, 159, 67, 74, 96, 85, 37, 205]
     }
   ],
   "events": [
     {
       "name": "PlatformInitialized",
-      "discriminator": [
-        16,
-        222,
-        212,
-        5,
-        213,
-        140,
-        112,
-        162
-      ]
+      "discriminator": [16, 222, 212, 5, 213, 140, 112, 162]
     },
     {
       "name": "EntrepreneurRegistered",
-      "discriminator": [
-        157,
-        5,
-        252,
-        220,
-        252,
-        170,
-        143,
-        139
-      ]
+      "discriminator": [157, 5, 252, 220, 252, 170, 143, 139]
     },
     {
       "name": "ProposalCreated",
-      "discriminator": [
-        186,
-        8,
-        160,
-        108,
-        81,
-        13,
-        51,
-        206
-      ]
+      "discriminator": [186, 8, 160, 108, 81, 13, 51, 206]
     },
     {
       "name": "ProposalApproved",
-      "discriminator": [
-        70,
-        49,
-        155,
-        228,
-        157,
-        43,
-        88,
-        49
-      ]
+      "discriminator": [70, 49, 155, 228, 157, 43, 88, 49]
     },
     {
       "name": "PoolCreated",
-      "discriminator": [
-        202,
-        44,
-        41,
-        88,
-        104,
-        220,
-        157,
-        82
-      ]
+      "discriminator": [202, 44, 41, 88, 104, 220, 157, 82]
     },
     {
       "name": "ContributionMade",
-      "discriminator": [
-        81,
-        218,
-        72,
-        109,
-        93,
-        96,
-        131,
-        199
-      ]
+      "discriminator": [81, 218, 72, 109, 93, 96, 131, 199]
     },
     {
       "name": "PoolFunded",
-      "discriminator": [
-        164,
-        221,
-        242,
-        68,
-        164,
-        64,
-        24,
-        214
-      ]
+      "discriminator": [164, 221, 242, 68, 164, 64, 24, 214]
     },
     {
       "name": "CapitalDisbursed",
-      "discriminator": [
-        146,
-        41,
-        200,
-        210,
-        255,
-        8,
-        104,
-        189
-      ]
+      "discriminator": [146, 41, 200, 210, 255, 8, 104, 189]
     },
     {
       "name": "SettlementSubmitted",
-      "discriminator": [
-        128,
-        245,
-        200,
-        67,
-        17,
-        89,
-        204,
-        82
-      ]
+      "discriminator": [128, 245, 200, 67, 17, 89, 204, 82]
     },
     {
       "name": "SettlementApproved",
-      "discriminator": [
-        11,
-        13,
-        1,
-        163,
-        187,
-        57,
-        161,
-        6
-      ]
+      "discriminator": [11, 13, 1, 163, 187, 57, 161, 6]
     },
     {
       "name": "InvestorClaimed",
-      "discriminator": [
-        250,
-        242,
-        56,
-        218,
-        135,
-        41,
-        60,
-        247
-      ]
+      "discriminator": [250, 242, 56, 218, 135, 41, 60, 247]
     },
     {
       "name": "EntrepreneurProfitClaimed",
-      "discriminator": [
-        186,
-        252,
-        35,
-        153,
-        14,
-        207,
-        68,
-        201
-      ]
+      "discriminator": [186, 252, 35, 153, 14, 207, 68, 201]
     },
     {
       "name": "PoolCancelled",
-      "discriminator": [
-        204,
-        15,
-        86,
-        4,
-        124,
-        97,
-        170,
-        173
-      ]
+      "discriminator": [204, 15, 86, 4, 124, 97, 170, 173]
     },
     {
       "name": "InvestorRefunded",
-      "discriminator": [
-        120,
-        193,
-        178,
-        19,
-        245,
-        11,
-        192,
-        48
-      ]
+      "discriminator": [120, 193, 178, 19, 245, 11, 192, 48]
     }
   ],
   "errors": [
@@ -1024,10 +715,7 @@
           {
             "name": "businessId",
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           },
           {
