@@ -94,7 +94,7 @@ export const faqs = [
   {
     question: "How are profits distributed?",
     answer:
-      "Verified profits follow the agreed pool terms after reporting and settlement approval. Returns are not guaranteed.",
+      "Verified profits follow the agreed pool terms after reporting and settlement approval.",
   },
   {
     question: "What if a business makes a loss?",

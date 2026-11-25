@@ -532,7 +532,7 @@ function Index() {
           </div>
           <div className="footer-bottom">
             <span>
-              © 2026 MoonCreditFi. All rights reserved. · Returns are not guaranteed. Capital is at
+              © 2026 MoonCreditFi. All rights reserved. · Returns aren't guaranteed; capital is at
               risk.
             </span>
             <span>

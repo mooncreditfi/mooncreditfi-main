@@ -179,8 +179,7 @@ function Readiness() {
       </div>
       <p className="risk-note">
         <CircleAlert />
-        This checklist is AI-generated guidance, not approval, legal advice or a promise of funding.
-        Mudarabah returns are not guaranteed and capital is at risk.
+        AI-generated preparation guidance only; not approval, legal advice, or a promise of funding.
       </p>
     </Workspace>
   );

@@ -206,10 +206,6 @@ export function OpportunitiesContentClient() {
           })}
         </section>
       )}
-      <p className="risk-note">
-        Pool activity is read from the MoonCreditFi program on Solana {SOLANA_NETWORK}. Investments
-        are not guaranteed; capital is at risk.
-      </p>
     </Workspace>
   );
 }

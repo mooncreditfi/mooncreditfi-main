@@ -669,9 +669,7 @@ export function PoolsContentClient() {
       {!readiness.ready && <p className="risk-note">{readiness.reason}</p>}
       <p className="risk-note">
         <CircleAlert />
-        This program interface has no on-chain funding or settlement deadlines, Defaulted status, or
-        declare-default instruction. Countdown and time-based default/refund actions are
-        unavailable.
+        No on-chain funding or settlement deadlines or default/refund flow are implemented.
       </p>
       {recentSignature && (
         <p className="risk-note">

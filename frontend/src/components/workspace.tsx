@@ -154,11 +154,6 @@ export function Workspace({ children }: { children: ReactNode }) {
         <div className="workspace-sidebar-bottom">
           <ShieldCheck />
           <strong>Trust Before Capital.</strong>
-          <p>
-            Returns are not guaranteed.
-            <br />
-            Capital is at risk.
-          </p>
           <Link to="/">
             Back to MoonCreditFi <ArrowUpRight size={14} />
           </Link>
@@ -232,12 +227,14 @@ export function Workspace({ children }: { children: ReactNode }) {
         </header>
         <div className="workspace-network-note">
           <CircleAlert size={14} />
-          <span>Devnet only · Tokens have no real value.</span>
+          <span>Solana Devnet · Test tokens have no real-world value.</span>
         </div>
         <main className="workspace-main">{children}</main>
         <footer className="workspace-footer">
           MoonCreditFi · Ethical finance. Earned trust.
-          <span>Pool transactions are wallet-confirmed and Devnet-only.</span>
+          <span>
+            Returns aren't guaranteed; capital is at risk. Pool actions require wallet approval.
+          </span>
         </footer>
       </div>
     </div>
@@ -579,11 +576,6 @@ export function DashboardContent({
           description="Required backend or blockchain integrations are not configured. No data is fabricated."
         />
       )}
-      <p className="risk-note">
-        <CircleAlert />
-        Mudarabah returns are not guaranteed. You may lose capital; verification and reputation do
-        not guarantee repayment.
-      </p>
     </Workspace>
   );
 }

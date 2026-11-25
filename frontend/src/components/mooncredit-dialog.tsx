@@ -81,7 +81,6 @@ export function MoonCreditDialog({ panel, onClose }: { panel: Panel | null; onCl
                 disclosed pool terms and risk information will be available before participation
                 opens.
               </p>
-              <p className="mt-3">Investment returns are not guaranteed. Capital is at risk.</p>
             </div>
           )}
           {panel === "entrepreneur" && (
