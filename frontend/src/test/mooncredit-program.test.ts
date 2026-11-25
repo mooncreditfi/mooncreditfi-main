@@ -13,9 +13,10 @@ describe("MoonCreditFi Anchor client", () => {
     expect(typeof Reflect.get(program.methods, "createPool")).toBe("function");
     expect(typeof Reflect.get(program.methods, "contribute")).toBe("function");
     expect(Reflect.get(program.account, "mudarabahPool")).toBeDefined();
-    expect(program.coder.accounts.accountDiscriminator("platformConfig").toString("hex")).toBe(
-      "a04e8000f853e6a0",
+    const platformConfig = moonCreditIdl.accounts.find(
+      (account) => account.name === "platformConfig",
     );
+    expect(platformConfig?.discriminator).toEqual([160, 78, 128, 0, 248, 83, 230, 160]);
     expect(program.programId.toBase58()).toBe(moonCreditIdl.address);
   });
 

@@ -8,6 +8,7 @@
 // hosting already compresses at the edge.
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { fileURLToPath } from "node:url";
+import type { PluginBuild } from "esbuild";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 const browserBufferPath = fileURLToPath(new URL("./node_modules/buffer/index.js", import.meta.url));
@@ -17,8 +18,9 @@ export default defineConfig({
     {
       name: "browser-buffer-polyfill",
       enforce: "pre",
-      resolveId(source) {
+      resolveId(source: string): string | null {
         if (source === "buffer" || source === "node:buffer") return browserBufferPath;
+        return null;
       },
     },
   ],
@@ -28,7 +30,7 @@ export default defineConfig({
         plugins: [
           {
             name: "browser-buffer-polyfill",
-            setup(build) {
+            setup(build: PluginBuild) {
               build.onResolve({ filter: /^(node:)?buffer$/ }, () => ({ path: browserBufferPath }));
             },
           },

@@ -1,9 +1,8 @@
 import { PublicKey } from "@solana/web3.js";
-import type { Idl } from "@coral-xyz/anchor";
-import idl from "@/idl/mooncreditfi.json";
+import { IDL } from "@/idl/mooncreditfi";
 import { MOONCREDIT_PROGRAM_ID, MOONCREDIT_USDC_MINT } from "@/lib/platform-capabilities";
 
-export const moonCreditIdl = idl as Idl;
+export const moonCreditIdl = IDL;
 export const moonCreditProgramId = new PublicKey(MOONCREDIT_PROGRAM_ID);
 export const moonCreditUsdcMint = new PublicKey(MOONCREDIT_USDC_MINT);
 const encoder = new TextEncoder();
@@ -23,7 +22,7 @@ export function getMoonCreditProgramReadiness(): MoonCreditProgramReadiness {
   ) {
     return { ready: false, reason: "The bundled IDL does not describe the MoonCreditFi program." };
   }
-  const instructionNames = new Set(
+  const instructionNames = new Set<string>(
     moonCreditIdl.instructions.map((instruction) => instruction.name),
   );
   const missing = ["registerEntrepreneur", "createProposal", "createPool", "contribute"].filter(
@@ -35,7 +34,7 @@ export function getMoonCreditProgramReadiness(): MoonCreditProgramReadiness {
       reason: `The bundled IDL is missing: ${missing.join(", ")}.`,
     };
   }
-  if (!moonCreditIdl.accounts?.some((account) => account.name === "PlatformConfig")) {
+  if (!moonCreditIdl.accounts?.some((account) => account.name === "platformConfig")) {
     return {
       ready: false,
       reason: "The bundled IDL is missing the platform configuration account.",

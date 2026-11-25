@@ -1,21 +1,15 @@
-import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
+import { BN } from "@coral-xyz/anchor";
 import {
   createAssociatedTokenAccountInstruction,
   getAssociatedTokenAddressSync,
-  getMint,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { useAnchorWallet, useConnection, useWallet } from "@solana/wallet-adapter-react";
-import {
-  PublicKey,
-  SystemProgram,
-  SYSVAR_RENT_PUBKEY,
-  Transaction,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction } from "@solana/web3.js";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { CircleAlert, ExternalLink, Handshake, RefreshCw, Wallet } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +21,6 @@ import {
   CONFIG_SEED,
   ENTREPRENEUR_SEED,
   getMoonCreditProgramReadiness,
-  moonCreditIdl,
   moonCreditProgramId,
   moonCreditUsdcMint,
   POOL_SEED,
@@ -37,172 +30,17 @@ import {
 } from "@/lib/mooncredit-program";
 import { parseUsdcAmount, validateContributionAmount } from "@/lib/pool-utils";
 import { SOLANA_NETWORK } from "@/lib/platform-capabilities";
+import {
+  moonCreditQueryKeys,
+  useConfig,
+  usePools,
+  useProgram,
+  useProposals,
+} from "@/lib/use-mooncredit";
+import { txToast } from "@/lib/tx-toast";
 
-type ProposalData = {
-  entrepreneur: PublicKey;
-  businessId: number[];
-  fundingGoal: BN;
-  entrepreneurProfitBps: number;
-  approved: boolean;
-};
-
-type PoolData = {
-  proposal: PublicKey;
-  entrepreneur: PublicKey;
-  mint: PublicKey;
-  vault: PublicKey;
-  fundingGoal: BN;
-  totalContributed: BN;
-  status: Record<string, unknown> | string;
-  investorCount: number;
-};
-
-type ChainAccount<T> = { publicKey: PublicKey; account: T };
-type ProgramArg = BN | number | number[];
-
-type PoolProposal = ChainAccount<ProposalData>;
-type LivePool = ChainAccount<PoolData>;
-
-const readOnlyWallet = {
-  publicKey: PublicKey.default,
-  signTransaction: async () => {
-    throw new Error("Connect a wallet to submit a transaction.");
-  },
-  signAllTransactions: async () => {
-    throw new Error("Connect a wallet to submit a transaction.");
-  },
-};
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object";
-}
-
-function getAccountClient(program: Program, name: string): Record<string, unknown> {
-  const client = Reflect.get(program.account, name);
-  if (!isRecord(client)) throw new Error(`The program IDL does not include account ${name}.`);
-  return client;
-}
-
-async function fetchNullableAccount(
-  program: Program,
-  name: string,
-  address: PublicKey,
-): Promise<unknown> {
-  const client = getAccountClient(program, name);
-  const fetchNullable = Reflect.get(client, "fetchNullable");
-  if (typeof fetchNullable !== "function") throw new Error(`Account ${name} cannot be fetched.`);
-  const result: unknown = await Reflect.apply(fetchNullable, client, [address]);
-  return result;
-}
-
-async function fetchAllAccounts(program: Program, name: string): Promise<ChainAccount<unknown>[]> {
-  const client = getAccountClient(program, name);
-  const all = Reflect.get(client, "all");
-  if (typeof all !== "function") throw new Error(`Account ${name} cannot be listed.`);
-  const rows: unknown = await Reflect.apply(all, client, []);
-  if (!Array.isArray(rows)) throw new Error(`Account ${name} returned invalid list data.`);
-  return rows.filter(
-    (row): row is ChainAccount<unknown> =>
-      isRecord(row) && row["publicKey"] instanceof PublicKey && "account" in row,
-  );
-}
-
-async function callProgramMethod(
-  program: Program,
-  name: string,
-  args: ProgramArg[],
-  accounts: Record<string, PublicKey>,
-  resultType: "rpc" | "instruction",
-): Promise<string | TransactionInstruction> {
-  const method = Reflect.get(program.methods, name);
-  if (typeof method !== "function")
-    throw new Error(`The program IDL does not include instruction ${name}.`);
-  const builder: unknown = Reflect.apply(method, program.methods, args);
-  if (!isRecord(builder)) throw new Error(`Could not create instruction ${name}.`);
-  const accountsMethod = Reflect.get(builder, "accounts");
-  if (typeof accountsMethod !== "function")
-    throw new Error(`Instruction ${name} has no account resolver.`);
-  const accountBuilder: unknown = Reflect.apply(accountsMethod, builder, [accounts]);
-  if (!isRecord(accountBuilder)) throw new Error(`Could not resolve accounts for ${name}.`);
-  const action = Reflect.get(accountBuilder, resultType);
-  if (typeof action !== "function") throw new Error(`Instruction ${name} cannot ${resultType}.`);
-  const result: unknown = await Reflect.apply(action, accountBuilder, []);
-  if (resultType === "instruction" && result instanceof TransactionInstruction) return result;
-  if (resultType === "rpc" && typeof result === "string") return result;
-  throw new Error(`Instruction ${name} returned an invalid ${resultType} result.`);
-}
-
-function parseProposal(value: ChainAccount<unknown>): PoolProposal | null {
-  if (!isRecord(value.account)) return null;
-  const account = value.account;
-  const rawBusinessId = account["businessId"];
-  const businessId = Array.isArray(rawBusinessId)
-    ? rawBusinessId.filter(
-        (item): item is number => Number.isInteger(item) && item >= 0 && item <= 255,
-      )
-    : [];
-  const entrepreneur = account["entrepreneur"];
-  const fundingGoal = account["fundingGoal"];
-  const profitBps = account["entrepreneurProfitBps"];
-  const approved = account["approved"];
-  if (
-    !(entrepreneur instanceof PublicKey) ||
-    businessId.length !== 32 ||
-    !(fundingGoal instanceof BN) ||
-    typeof profitBps !== "number" ||
-    typeof approved !== "boolean"
-  ) {
-    return null;
-  }
-  return {
-    publicKey: value.publicKey,
-    account: {
-      entrepreneur,
-      businessId,
-      fundingGoal,
-      entrepreneurProfitBps: profitBps,
-      approved,
-    },
-  };
-}
-
-function parsePool(value: ChainAccount<unknown>): LivePool | null {
-  if (!isRecord(value.account)) return null;
-  const account = value.account;
-  const proposal = account["proposal"];
-  const entrepreneur = account["entrepreneur"];
-  const mint = account["mint"];
-  const vault = account["vault"];
-  const fundingGoal = account["fundingGoal"];
-  const totalContributed = account["totalContributed"];
-  const status = account["status"];
-  const investorCount = account["investorCount"];
-  if (
-    !(proposal instanceof PublicKey) ||
-    !(entrepreneur instanceof PublicKey) ||
-    !(mint instanceof PublicKey) ||
-    !(vault instanceof PublicKey) ||
-    !(fundingGoal instanceof BN) ||
-    !(totalContributed instanceof BN) ||
-    (!isRecord(status) && typeof status !== "string") ||
-    typeof investorCount !== "number"
-  ) {
-    return null;
-  }
-  return {
-    publicKey: value.publicKey,
-    account: {
-      proposal,
-      entrepreneur,
-      mint,
-      vault,
-      fundingGoal,
-      totalContributed,
-      status,
-      investorCount,
-    },
-  };
-}
+type PoolProposal = NonNullable<ReturnType<typeof useProposals>["data"]>[number];
+type LivePool = NonNullable<ReturnType<typeof usePools>["data"]>[number];
 
 function formatUsdc(amount: BN): string {
   const whole = amount.div(new BN(1_000_000)).toString();
@@ -215,7 +53,7 @@ function shortKey(key: PublicKey): string {
   return `${value.slice(0, 5)}…${value.slice(-5)}`;
 }
 
-function statusName(status: PoolData["status"]): string {
+function statusName(status: LivePool["account"]["status"]): string {
   if (typeof status === "string") return status;
   return Object.keys(status)[0] ?? "unknown";
 }
@@ -228,20 +66,17 @@ export function PoolsContentClient() {
   const { connection } = useConnection();
   const { publicKey } = useWallet();
   const anchorWallet = useAnchorWallet();
-  const provider = useMemo(
-    () =>
-      new AnchorProvider(connection, anchorWallet ?? readOnlyWallet, {
-        commitment: "confirmed",
-        preflightCommitment: "confirmed",
-      }),
-    [anchorWallet, connection],
-  );
-  const program = useMemo(() => new Program(moonCreditIdl, provider), [provider]);
-  const [pools, setPools] = useState<LivePool[]>([]);
-  const [proposals, setProposals] = useState<PoolProposal[]>([]);
-  const [loading, setLoading] = useState(true);
+  const program = useProgram();
+  const queryClient = useQueryClient();
+  const poolsQuery = usePools();
+  const proposalsQuery = useProposals();
+  const configQuery = useConfig();
+  const pools = useMemo(() => poolsQuery.data ?? [], [poolsQuery.data]);
+  const proposals = proposalsQuery.data ?? [];
+  const loadError = poolsQuery.error ?? proposalsQuery.error ?? configQuery.error;
+  const error = loadError ? errorMessage(loadError) : "";
+  const loading = poolsQuery.isFetching || proposalsQuery.isFetching || configQuery.isFetching;
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
   const [profileError, setProfileError] = useState("");
   const [recentSignature, setRecentSignature] = useState("");
   const [entrepreneurRole, setEntrepreneurRole] = useState(false);
@@ -249,47 +84,9 @@ export function PoolsContentClient() {
   const [entrepreneurProfitBps, setEntrepreneurProfitBps] = useState("2000");
   const [contributionAmounts, setContributionAmounts] = useState<Record<string, string>>({});
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const configAddress = PublicKey.findProgramAddressSync([CONFIG_SEED], moonCreditProgramId)[0];
-      const config = await fetchNullableAccount(program, "platformConfig", configAddress);
-      if (!config || !isRecord(config) || !(config["usdcMint"] instanceof PublicKey)) {
-        throw new Error("MoonCreditFi is not initialized on Devnet.");
-      }
-      if (!config["usdcMint"].equals(moonCreditUsdcMint)) {
-        throw new Error(
-          "The deployed program's USDC mint does not match the configured Devnet mint.",
-        );
-      }
-      const mintInfo = await getMint(connection, moonCreditUsdcMint, "confirmed");
-      if (mintInfo.decimals !== 6) {
-        throw new Error("The configured Devnet USDC mint must use six decimal places.");
-      }
-
-      const [poolRows, proposalRows] = await Promise.all([
-        fetchAllAccounts(program, "mudarabahPool"),
-        fetchAllAccounts(program, "businessProposal"),
-      ]);
-      const parsedPools = poolRows.map(parsePool).filter((row): row is LivePool => row !== null);
-      const parsedProposals = proposalRows
-        .map(parseProposal)
-        .filter((row): row is PoolProposal => row !== null);
-      setPools(parsedPools);
-      setProposals(parsedProposals);
-    } catch (loadError) {
-      setPools([]);
-      setProposals([]);
-      setError(errorMessage(loadError));
-    } finally {
-      setLoading(false);
-    }
-  }, [connection, program]);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  async function refresh() {
+    await Promise.all([poolsQuery.refetch(), proposalsQuery.refetch(), configQuery.refetch()]);
+  }
 
   useEffect(() => {
     let active = true;
@@ -346,18 +143,19 @@ export function PoolsContentClient() {
         [ENTREPRENEUR_SEED, publicKey.toBuffer()],
         moonCreditProgramId,
       )[0];
-      const existingProfile = await fetchNullableAccount(
-        program,
-        "entrepreneurProfile",
-        entrepreneurProfile,
-      );
+      const existingProfile =
+        await program.account.entrepreneurProfile.fetchNullable(entrepreneurProfile);
+      const transaction = new Transaction();
       if (!existingProfile) {
-        await callProgramMethod(
-          program,
-          "registerEntrepreneur",
-          [],
-          { entrepreneurProfile, entrepreneur: publicKey, systemProgram: SystemProgram.programId },
-          "rpc",
+        transaction.add(
+          await program.methods
+            .registerEntrepreneur()
+            .accounts({
+              entrepreneurProfile,
+              entrepreneur: publicKey,
+              systemProgram: SystemProgram.programId,
+            })
+            .instruction(),
         );
       }
 
@@ -366,26 +164,26 @@ export function PoolsContentClient() {
         [PROPOSAL_SEED, publicKey.toBuffer(), Uint8Array.from(businessId)],
         moonCreditProgramId,
       )[0];
-      const signature = await callProgramMethod(
-        program,
-        "createProposal",
-        [businessId, goal, share],
-        {
-          entrepreneurProfile,
-          proposal: proposalAddress,
-          entrepreneur: publicKey,
-          systemProgram: SystemProgram.programId,
-        },
-        "rpc",
+      transaction.add(
+        await program.methods
+          .createProposal(businessId, goal, share)
+          .accounts({
+            entrepreneurProfile,
+            proposal: proposalAddress,
+            entrepreneur: publicKey,
+            systemProgram: SystemProgram.programId,
+          })
+          .instruction(),
       );
-      if (typeof signature !== "string")
-        throw new Error("Proposal transaction signature was not returned.");
+      const signature = await program.provider.sendAndConfirm?.(transaction);
+      if (!signature) throw new Error("The Anchor provider cannot submit this transaction.");
       setRecentSignature(signature);
-      toast.success(
+      txToast(
+        signature,
         `Proposal submitted: ${shortKey(proposalAddress)}. It requires admin approval.`,
       );
       setFundingGoal("");
-      await refresh();
+      await queryClient.invalidateQueries({ queryKey: moonCreditQueryKeys.all });
     } catch (submitError) {
       toast.error(errorMessage(submitError));
     } finally {
@@ -412,11 +210,9 @@ export function PoolsContentClient() {
         [VAULT_SEED, poolAddress.toBuffer()],
         moonCreditProgramId,
       )[0];
-      const signature = await callProgramMethod(
-        program,
-        "createPool",
-        [],
-        {
+      const signature = await program.methods
+        .createPool()
+        .accounts({
           config: PublicKey.findProgramAddressSync([CONFIG_SEED], moonCreditProgramId)[0],
           proposal: proposal.publicKey,
           pool: poolAddress,
@@ -426,14 +222,11 @@ export function PoolsContentClient() {
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
           rent: SYSVAR_RENT_PUBKEY,
-        },
-        "rpc",
-      );
-      if (typeof signature !== "string")
-        throw new Error("Pool transaction signature was not returned.");
+        })
+        .rpc();
       setRecentSignature(signature);
-      toast.success(`Pool created: ${shortKey(poolAddress)}.`);
-      await refresh();
+      txToast(signature, `Pool created: ${shortKey(poolAddress)}.`);
+      await queryClient.invalidateQueries({ queryKey: moonCreditQueryKeys.all });
     } catch (createError) {
       toast.error(errorMessage(createError));
     } finally {
@@ -484,11 +277,9 @@ export function PoolsContentClient() {
           ),
         );
       }
-      const instruction = await callProgramMethod(
-        program,
-        "contribute",
-        [amount],
-        {
+      const instruction = await program.methods
+        .contribute(amount)
+        .accounts({
           pool: pool.publicKey,
           position,
           investorTokenAccount,
@@ -497,18 +288,15 @@ export function PoolsContentClient() {
           investor: publicKey,
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
-        },
-        "instruction",
-      );
-      if (!(instruction instanceof TransactionInstruction)) {
-        throw new Error("The contribution instruction could not be constructed.");
-      }
+        })
+        .instruction();
       transaction.add(instruction);
-      const signature = await provider.sendAndConfirm(transaction);
+      const signature = await program.provider.sendAndConfirm?.(transaction);
+      if (!signature) throw new Error("The Anchor provider cannot submit this transaction.");
       setRecentSignature(signature);
-      toast.success(`USDC contribution confirmed: ${shortKey(pool.publicKey)}.`);
+      txToast(signature, `USDC contribution confirmed: ${shortKey(pool.publicKey)}.`);
       setContributionAmounts((current) => ({ ...current, [pool.publicKey.toBase58()]: "" }));
-      await refresh();
+      await queryClient.invalidateQueries({ queryKey: moonCreditQueryKeys.all });
     } catch (contributeError) {
       toast.error(errorMessage(contributeError));
     } finally {
@@ -520,9 +308,7 @@ export function PoolsContentClient() {
     () => new Set(pools.map((pool) => pool.account.proposal.toBase58())),
     [pools],
   );
-  const ownProposals = publicKey
-    ? proposals.filter((proposal) => proposal.account.entrepreneur.equals(publicKey))
-    : [];
+  const ownProposals = proposals;
   const readiness = getMoonCreditProgramReadiness();
 
   return (

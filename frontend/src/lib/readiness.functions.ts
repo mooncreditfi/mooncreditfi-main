@@ -59,7 +59,7 @@ export const listAssessments = createServerFn({ method: "GET" })
 
 export const generateAssessment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: ReadinessInput) => validate(i))
+  .validator(validate)
   .handler(async ({ data, context }) => {
     const { generateResponse, GatewayError } = await import("@lovable.dev/ai-gateway");
     const schema = {
@@ -94,7 +94,7 @@ export const generateAssessment = createServerFn({ method: "POST" })
           },
         },
       },
-    };
+    } as const;
     let text = "";
     try {
       const res = await generateResponse({
