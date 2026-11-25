@@ -1,6 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { CircleAlert, LockKeyhole } from "lucide-react";
-import { WalletConnectButton } from "@/components/wallet/wallet-connect";
 import { Workspace, WorkspaceTitle } from "@/components/workspace";
 import { supabase } from "@/integrations/supabase/client";
 import { getMoonCreditProfile } from "@/lib/account-profile";
@@ -42,7 +41,7 @@ function WalletAccess() {
           Sign in once with your wallet to access all workspaces enabled on your profile. This
           signature verifies your identity; it does not authorize a blockchain transaction.
         </p>
-        <WalletConnectButton />
+        <p>Use the wallet control in the page header to connect and sign in.</p>
       </div>
       <p className="risk-note">
         <CircleAlert />

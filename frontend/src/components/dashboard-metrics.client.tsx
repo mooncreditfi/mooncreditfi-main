@@ -1,7 +1,6 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { CircleAlert, Wallet } from "lucide-react";
 import { BN } from "@coral-xyz/anchor";
-import { WalletConnectButton } from "@/components/wallet/wallet-connect";
 import { usePools, usePositions, useProposals } from "@/lib/use-mooncredit";
 import { SOLANA_NETWORK } from "@/lib/platform-capabilities";
 
@@ -34,9 +33,9 @@ export function DashboardMetrics({ entrepreneur }: { entrepreneur: boolean }) {
         <Wallet aria-hidden="true" />
         <h2>Connect your Solana wallet</h2>
         <p>
-          Live {entrepreneur ? "proposal" : "portfolio"} metrics are read from {SOLANA_NETWORK}.
+          Connect your wallet from the page header to load live{" "}
+          {entrepreneur ? "proposal" : "portfolio"} metrics from {SOLANA_NETWORK}.
         </p>
-        <WalletConnectButton requireAuthentication={false} />
       </div>
     );
   }

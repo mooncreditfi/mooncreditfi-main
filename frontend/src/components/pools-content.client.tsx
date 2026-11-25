@@ -28,7 +28,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { WalletConnectButton } from "@/components/wallet/wallet-connect";
 import { Workspace, WorkspaceTitle } from "@/components/workspace";
 import { supabase } from "@/integrations/supabase/client";
 import { getMoonCreditProfile } from "@/lib/account-profile";
@@ -873,7 +872,9 @@ export function PoolsContentClient() {
                     {busy && open ? "Contributing…" : "Contribute USDC"}
                   </Button>
                 ) : (
-                  <WalletConnectButton />
+                  <p className="wallet-action-hint">
+                    Connect and sign in from the page header to contribute.
+                  </p>
                 )}
               </article>
             );
@@ -909,10 +910,9 @@ export function PoolsContentClient() {
                   ? "Checking on-chain contributions for this wallet."
                   : publicKey
                     ? "Your pool contributions and payout status will appear here."
-                    : "Connect the wallet you used to contribute to view your on-chain positions."}
+                    : "Connect the wallet you used to contribute from the page header to view your on-chain positions."}
               </p>
             </div>
-            {!publicKey && !positionsQuery.isFetching && <WalletConnectButton />}
           </div>
         ) : (
           <div className="positions-table-wrap">
@@ -1044,7 +1044,9 @@ export function PoolsContentClient() {
                   {busy ? "Submitting…" : "Submit for admin approval"}
                 </Button>
               ) : (
-                <WalletConnectButton />
+                <p className="wallet-action-hint">
+                  Connect and sign in from the page header to submit a proposal.
+                </p>
               )}
             </form>
 

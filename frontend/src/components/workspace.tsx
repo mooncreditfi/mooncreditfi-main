@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { SiSolana } from "react-icons/si";
 import { Button } from "@/components/ui/button";
+import { WalletConnectButton } from "@/components/wallet/wallet-connect";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -181,16 +182,15 @@ export function Workspace({ children }: { children: ReactNode }) {
               Solana Devnet
             </span>
           </div>
-          {signedIn ? (
-            <Button variant="wallet" onClick={() => void signOut()}>
-              <LogOut />
-              Sign out
-            </Button>
-          ) : location.pathname !== "/auth" ? (
-            <Button asChild variant="wallet">
-              <Link to="/auth">Sign in</Link>
-            </Button>
-          ) : null}
+          <div className="workspace-header-actions">
+            <WalletConnectButton requireAuthentication={!signedIn} showBalance compact />
+            {signedIn && (
+              <Button variant="wallet" onClick={() => void signOut()}>
+                <LogOut />
+                Sign out
+              </Button>
+            )}
+          </div>
         </header>
         <div className="workspace-network-note">
           <CircleAlert size={14} />

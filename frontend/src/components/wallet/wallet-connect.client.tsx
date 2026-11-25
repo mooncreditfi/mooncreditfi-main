@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletReadyState } from "@solana/wallet-adapter-base";
 import { Check, Copy, ExternalLink, Loader2, LogOut, Wallet as WalletIcon } from "lucide-react";
 import { SiSolana } from "react-icons/si";
@@ -21,6 +22,8 @@ import {
 type WalletConnectProps = {
   onAuthenticated?: () => void;
   requireAuthentication?: boolean;
+  showBalance?: boolean;
+  compact?: boolean;
 };
 
 const walletLinks: Record<string, string> = {
@@ -53,8 +56,11 @@ function errorText(error: unknown) {
 export function WalletConnectButtonClient({
   onAuthenticated,
   requireAuthentication = true,
+  showBalance = false,
+  compact = false,
 }: WalletConnectProps) {
   const navigate = useNavigate();
+  const { connection } = useConnection();
   const walletState = useWallet();
   const { wallets, wallet, publicKey, connected, connecting, select, connect, disconnect } =
     walletState;
@@ -62,8 +68,59 @@ export function WalletConnectButtonClient({
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [connectingName, setConnectingName] = useState<string | null>(null);
+  const [balanceLamports, setBalanceLamports] = useState<number | null>(null);
+  const [balanceError, setBalanceError] = useState<string | null>(null);
   const address = publicKey?.toBase58();
   const addressRef = useRef(address);
+
+  useEffect(() => {
+    if (!showBalance || !connected || !publicKey) {
+      setBalanceLamports(null);
+      setBalanceError(null);
+      return;
+    }
+
+    setBalanceLamports(null);
+    setBalanceError(null);
+    let active = true;
+    const refreshBalance = async () => {
+      try {
+        const lamports = await connection.getBalance(publicKey, "confirmed");
+        if (active) {
+          setBalanceLamports(lamports);
+          setBalanceError(null);
+        }
+      } catch (error) {
+        if (active) {
+          const message = error instanceof Error ? error.message : "RPC request failed.";
+          setBalanceError(message);
+          console.error("Could not load the connected wallet SOL balance.", error);
+        }
+      }
+    };
+
+    void refreshBalance();
+    const subscriptionId = connection.onAccountChange(
+      publicKey,
+      (accountInfo) => {
+        if (!active) return;
+        setBalanceLamports(accountInfo.lamports);
+        setBalanceError(null);
+      },
+      "confirmed",
+    );
+    window.addEventListener("focus", refreshBalance);
+
+    return () => {
+      active = false;
+      window.removeEventListener("focus", refreshBalance);
+      void connection
+        .removeAccountChangeListener(subscriptionId)
+        .catch((error) =>
+          console.error("Could not unsubscribe from wallet balance updates.", error),
+        );
+    };
+  }, [connected, connection, publicKey, showBalance]);
 
   useEffect(() => {
     addressRef.current = address;
@@ -170,17 +227,37 @@ export function WalletConnectButtonClient({
   return (
     <>
       {connected && address ? (
-        <div className="wallet-connected">
-          <span className="network-badge">
-            <span />
-            <SiSolana className="network-badge-icon" aria-hidden="true" />
-            Solana {SOLANA_NETWORK}
-          </span>
+        <div className={`wallet-connected${compact ? " is-compact" : ""}`}>
+          {!compact && (
+            <span className="network-badge">
+              <span />
+              <SiSolana className="network-badge-icon" aria-hidden="true" />
+              Solana {SOLANA_NETWORK}
+            </span>
+          )}
           <code>{shortAddress(address)}</code>
+          {showBalance && (
+            <span
+              className="wallet-balance"
+              role="status"
+              aria-label="Connected wallet SOL balance"
+              title={balanceError ?? `SOL balance on Solana ${SOLANA_NETWORK}`}
+            >
+              {balanceLamports === null
+                ? balanceError
+                  ? "Balance unavailable"
+                  : "Loading balance…"
+                : `${new Intl.NumberFormat(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 4,
+                  }).format(balanceLamports / LAMPORTS_PER_SOL)} SOL`}
+            </span>
+          )}
           <Button
             type="button"
             variant="ghost"
             size="icon"
+            className={compact ? "wallet-copy-button" : undefined}
             aria-label="Copy full wallet address"
             onClick={() => void copyAddress()}
           >

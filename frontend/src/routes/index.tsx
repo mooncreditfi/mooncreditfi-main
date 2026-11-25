@@ -140,7 +140,7 @@ function Index() {
             ))}
           </nav>
           <div className="header-actions shrink-0">
-            <WalletConnectButton />
+            <WalletConnectButton showBalance />
             <Button
               variant="ghost"
               size="icon"
