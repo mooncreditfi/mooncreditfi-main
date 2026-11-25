@@ -2,7 +2,8 @@ import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { createClientOnlyFn } from "@tanstack/react-start";
 import { WalletRuntimeContext } from "./wallet-runtime-context";
 const loadWalletProvider = createClientOnlyFn(async () => {
-  await import("@/lib/solana-buffer");
+  const { installSolanaBuffer } = await import("@/lib/solana-buffer");
+  installSolanaBuffer();
   return import("./wallet-provider.client");
 });
 

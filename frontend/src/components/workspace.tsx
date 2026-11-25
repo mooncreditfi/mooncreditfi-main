@@ -30,19 +30,23 @@ import {
 } from "@/lib/account-profile";
 
 const loadClientPools = createClientOnlyFn(async () => {
-  await import("@/lib/solana-buffer");
+  const { installSolanaBuffer } = await import("@/lib/solana-buffer");
+  installSolanaBuffer();
   return import("./pools-content.client");
 });
 const loadClientAdmin = createClientOnlyFn(async () => {
-  await import("@/lib/solana-buffer");
+  const { installSolanaBuffer } = await import("@/lib/solana-buffer");
+  installSolanaBuffer();
   return import("./admin-content.client");
 });
 const loadClientDashboard = createClientOnlyFn(async () => {
-  await import("@/lib/solana-buffer");
+  const { installSolanaBuffer } = await import("@/lib/solana-buffer");
+  installSolanaBuffer();
   return import("./dashboard-metrics.client");
 });
 const loadClientOpportunities = createClientOnlyFn(async () => {
-  await import("@/lib/solana-buffer");
+  const { installSolanaBuffer } = await import("@/lib/solana-buffer");
+  installSolanaBuffer();
   return import("./opportunities-content.client");
 });
 
