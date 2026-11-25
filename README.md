@@ -1,122 +1,98 @@
-# MoonCreditFi — Solana Anchor contracts
+# MoonCreditFi
 
-Initial development scaffold for MoonCreditFi's Mudarabah funding workflow.
+MoonCreditFi is a Solana application for Mudarabah-style business funding. The repository contains an Anchor program and a React/TanStack frontend. The current pool workflow is configured for Solana Devnet.
 
-## Stack
-- Solana / Anchor 0.30.1
-- Rust
-- SPL Token (classic Token Program)
-- Six-decimal configured stablecoin mint
-- Devnet provider configuration
+## What works today
 
-## Important safety boundary
+- Sign in with a Solana wallet throughout the workspace using a signed sign-in message and Supabase Auth.
+- Browse live pool and proposal accounts read from the MoonCreditFi Devnet program.
+- Submit an entrepreneur funding proposal with a USDC target and profit-share basis points.
+- Create a pool from an approved proposal.
+- Contribute Devnet USDC to an open pool. If needed, the page creates the contributor's associated token account in the contribution transaction.
+- Review on-chain transaction links in Solana Explorer.
 
-This is a **development scaffold, not an audited or production-ready financial protocol**.
-Do not use real funds. It has not been compiled or tested in your local environment.
+Every transaction must be explicitly signed by the connected wallet. A sign-in signature authenticates a session only; it does not authorize a blockchain transaction.
 
-The first implementation supports:
-- platform initialization with one configured six-decimal mint
-- entrepreneur profile registration
-- proposal creation and reviewer approval
-- one pool per proposal, with multiple investor positions
-- PDA-controlled pool vault
-- contributions, funding activation and capital disbursement
-- entrepreneur-reported settlement deposit and reviewer approval
-- pro-rata investor claims and entrepreneur profit claim
-- cancellation and investor refunds before capital disbursement
+### Approval and roles
 
-The contract does not verify business documents, identity, actual profit, fraud, or Sharia compliance.
-Settlement approval is a governance/reviewer action and must be backed by an off-chain evidence and dispute process.
+Entrepreneur and investor roles are selected in the user's profile. Signing in does not grant a role or approve a funding request. A funding proposal must be approved by the program's platform authority before its entrepreneur can create a pool. Proposal approval is an administrator action, not an automatic sign-in or pool-page action.
 
-## 1. Prerequisites
+## Devnet configuration
 
-Use Ubuntu in WSL2 on Windows. Install compatible versions of:
-- Rust and Cargo
-- Solana CLI
-- Anchor CLI 0.30.1 (use AVM if available)
-- Node.js and Yarn
+| Setting | Value |
+| --- | --- |
+| Network | Solana Devnet |
+| Program ID | `6LVAYFDRrTHSiHZqMWr4tybZNRi755HsoHgeku985pYx` |
+| Configured USDC mint | `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU` |
+| Token program | Classic SPL Token Program |
 
-Check:
-```bash
-rustc --version
-cargo --version
-solana --version
-anchor --version
-node --version
-yarn --version
+The program ID and mint are configured in [platform-capabilities.ts](frontend/src/lib/platform-capabilities.ts); the Anchor client uses [mooncredit-program.ts](frontend/src/lib/mooncredit-program.ts) and the bundled [mooncreditfi.json](frontend/src/idl/mooncreditfi.json) IDL.
+
+`Anchor.toml` defaults its provider to Localnet. Use an explicit Devnet cluster flag when deploying or using the CLI against Devnet. The frontend pool page targets Devnet.
+
+## Requirements
+
+- Node.js and npm for the frontend.
+- Rust, Cargo, Solana CLI, and Anchor CLI 0.30.1 for the program.
+- A supported Solana wallet (Phantom or Solflare) set to Devnet.
+- A Supabase project configured for Solana wallet sign-in.
+
+## Run the frontend
+
+Configure these environment variables for the frontend (for example in `frontend/.env.local`). Do not commit credentials or private keys:
+
+```dotenv
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-public-publishable-key
 ```
 
-## 2. Install JavaScript dependencies
-
-From this directory:
-```bash
-yarn install
-```
-
-## 3. Build and synchronize the program ID
+Install dependencies and start the development server:
 
 ```bash
-anchor build
-anchor keys sync
-anchor build
+cd frontend
+npm ci
+npm run dev
 ```
 
-After `anchor keys sync`, check that the program ID in `declare_id!` and `Anchor.toml` match:
-```bash
-anchor keys list
-```
-
-Keep `target/deploy/mooncreditfi-keypair.json` private. Do not commit it or share it.
-
-## 4. Configure Devnet
+The pool workspace is available at `/pools`. Other useful frontend commands:
 
 ```bash
-solana config set --url devnet
-solana address
-solana balance
+npm test
+npm run lint
+npm run build
 ```
 
-Fund your development wallet with Devnet SOL:
-```bash
-solana airdrop 2
-```
+## Build and test the Anchor program
 
-Do not use your main wallet seed phrase or private key for development.
-
-## 5. Build and test
+From the repository root:
 
 ```bash
 anchor build
 anchor test
 ```
 
-The included TypeScript test only checks provider connectivity. It is not a security test suite. Implement the integration and adversarial tests listed above before deployment.
-
-## 6. Devnet USDC mint
-
-The commonly used Circle Devnet USDC mint is:
-`4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`
-
-Verify this address against current Circle/Solana documentation before initializing the platform. Do not accept a mint address supplied by an arbitrary frontend user. The platform config pins the mint at initialization.
-
-## 7. Deploy only after local tests
+The Anchor test provider is Localnet by default. To deploy to Devnet, first confirm the program keypair, authority wallet, and configuration, then explicitly select the cluster:
 
 ```bash
+solana config set --url devnet
+solana address
+solana balance
+solana airdrop 2
 anchor deploy --provider.cluster devnet
 ```
 
-For local validator testing, `anchor test` uses the Localnet provider setting. For Devnet deployment, the command above explicitly overrides the cluster.\n\nThen verify the deployed program ID and inspect transactions on Solana Explorer with the Devnet cluster selected.
+Use only a development wallet. Never share or commit a wallet seed phrase, private key, or `target/deploy/mooncreditfi-keypair.json`.
 
-## Financial and security limitations to resolve before mainnet
+## Contract and verification notes
 
-1. The configured authority currently approves proposals, settlements, and cancellations. Replace this single signer with a properly integrated multisig governance flow before real funds.
-2. Settlement evidence, business verification, legal agreements, Sharia review, dispute handling, and sanctions/AML processes are off-chain responsibilities.
-3. Rounding dust can remain in the vault. Add a formally specified dust/refund policy and exhaustive tests before mainnet.
-4. There is no time-based funding expiry, milestone disbursement, emergency pause, authority rotation, or account closure in this first scaffold.
-5. The code uses the classic SPL Token Program. Token-2022 is not supported.
-6. Investor claim calculations use floor rounding. Test all edge cases and ensure the final accounting policy is disclosed.
-7. A wallet signature proves control of a wallet, not the real-world identity of its owner.
+The program includes platform initialization, entrepreneur registration, proposal submission and authority approval, pool creation, USDC contributions, funding activation and disbursement, settlement approval, investor claims, entrepreneur profit claims, cancellation, and pre-disbursement refunds. The current frontend exposes proposal submission, approved-pool creation, and contributions; other contract instructions may not have a frontend flow.
 
-## Program ID placeholder
+The frontend checks the on-chain platform configuration and mint before loading the pool workflow. The bundled IDL is in Anchor 0.30 format. The Devnet program/configuration and mint have been checked, but verify the complete deployed instruction/account ABI against the deployed program before relying on transactions.
 
-The initial program ID is generated for this scaffold. Run `anchor build` and `anchor keys sync` to create/synchronize the actual local program keypair and ID before deployment.
+## Safety limitations
+
+This project is development software, not an audited or production-ready financial protocol. Do not use real funds. Devnet tokens have no real value, and successful transactions do not establish that a business or investment is legitimate.
+
+The contract does not verify identity, business documents, actual profit, fraud, or Sharia compliance. Settlement evidence, legal agreements, business verification, dispute handling, and sanctions/AML processes require separate off-chain controls. The program currently uses a single platform authority; do not use it to manage real funds without a security review, governance controls, and a documented operational process.
+
+Additional protocol limitations include rounding dust, floor-rounded investor claims, no time-based funding expiry or emergency pause, and no Token-2022 support. Review the Rust program and tests before changing these assumptions or deploying.
