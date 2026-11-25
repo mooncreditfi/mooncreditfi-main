@@ -1,7 +1,10 @@
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { createClientOnlyFn } from "@tanstack/react-start";
 import { WalletRuntimeContext } from "./wallet-runtime-context";
-const loadWalletProvider = createClientOnlyFn(() => import("./wallet-provider.client"));
+const loadWalletProvider = createClientOnlyFn(async () => {
+  await import("@/lib/solana-buffer");
+  return import("./wallet-provider.client");
+});
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [ClientProvider, setClientProvider] = useState<ComponentType<{
