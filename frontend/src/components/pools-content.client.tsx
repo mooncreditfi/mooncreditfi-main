@@ -104,11 +104,17 @@ export function PoolsContentClient() {
   const program = useProgram();
   const queryClient = useQueryClient();
   const poolsQuery = usePools();
+  const positionsQuery = usePositions(publicKey);
   const proposalsQuery = useProposals();
   const publicProposalsQuery = usePublicProposals();
   const rejectionsQuery = useProposalRejections();
   const configQuery = useConfig();
   const pools = useMemo(() => poolsQuery.data ?? [], [poolsQuery.data]);
+  const positions = useMemo(() => positionsQuery.data ?? [], [positionsQuery.data]);
+  const positionByPool = useMemo(
+    () => new Map(positions.map((position) => [position.account.pool.toBase58(), position])),
+    [positions],
+  );
   const proposals = proposalsQuery.data ?? [];
   const publicProposals = useMemo(
     () => publicProposalsQuery.data ?? [],
@@ -124,6 +130,7 @@ export function PoolsContentClient() {
   );
   const loadError =
     poolsQuery.error ??
+    positionsQuery.error ??
     proposalsQuery.error ??
     publicProposalsQuery.error ??
     rejectionsQuery.error ??
@@ -131,6 +138,7 @@ export function PoolsContentClient() {
   const error = loadError ? errorMessage(loadError) : "";
   const loading =
     poolsQuery.isFetching ||
+    positionsQuery.isFetching ||
     proposalsQuery.isFetching ||
     publicProposalsQuery.isFetching ||
     rejectionsQuery.isFetching ||
@@ -590,6 +598,14 @@ export function PoolsContentClient() {
   }, [poolSearch, poolStatusFilter, pools]);
   const ownProposals = proposals;
   const readiness = getMoonCreditProgramReadiness();
+  const openPoolCount = pools.filter(
+    (pool) => statusName(pool.account.status).toLowerCase() === "open",
+  ).length;
+  const totalRaised = pools.reduce(
+    (total, pool) => total.add(pool.account.totalContributed),
+    new BN(0),
+  );
+  const totalTarget = pools.reduce((total, pool) => total.add(pool.account.fundingGoal), new BN(0));
 
   return (
     <Workspace>
@@ -609,35 +625,46 @@ export function PoolsContentClient() {
         </Button>
       </WorkspaceTitle>
 
-      <div className="workspace-section-heading">
-        <h2>Pool activity</h2>
-        <span>Solana {SOLANA_NETWORK} · USDC</span>
-      </div>
-      <div className="workspace-principles">
-        <div>
-          <Handshake />
-          <h3>Verified program</h3>
-          <p>
-            <a
-              href={`https://explorer.solana.com/address/${moonCreditProgramId.toBase58()}?cluster=devnet`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {shortKey(moonCreditProgramId)} <ExternalLink size={13} />
-            </a>
-          </p>
+      <section className="pool-overview" aria-label="Pool overview">
+        <div className="pool-overview-heading">
+          <div>
+            <p className="eyebrow">LIVE ON-CHAIN ACTIVITY</p>
+            <h2>Funding at a glance</h2>
+            <p>Pool balances are read directly from the MoonCreditFi program.</p>
+          </div>
+          <span className="pool-network-chip">Solana {SOLANA_NETWORK} · USDC</span>
         </div>
-        <div>
-          <Wallet />
-          <h3>Configured mint</h3>
-          <p>{shortKey(moonCreditUsdcMint)}</p>
+        <div className="pool-summary-grid">
+          <article className="pool-summary-card">
+            <span>Live pools</span>
+            <strong>{pools.length}</strong>
+            <small>{openPoolCount} open for contributions</small>
+          </article>
+          <article className="pool-summary-card">
+            <span>Total raised</span>
+            <strong>{formatUsdc(totalRaised)}</strong>
+            <small>USDC across all pools</small>
+          </article>
+          <article className="pool-summary-card">
+            <span>Funding targets</span>
+            <strong>{formatUsdc(totalTarget)}</strong>
+            <small>USDC requested on-chain</small>
+          </article>
         </div>
-        <div>
-          <CircleAlert />
-          <h3>Returns at risk</h3>
-          <p>Funding and returns are not guaranteed. Review the terms before signing.</p>
+        <div className="pool-program-line">
+          <span>Verified program</span>
+          <a
+            href={`https://explorer.solana.com/address/${moonCreditProgramId.toBase58()}?cluster=devnet`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {shortKey(moonCreditProgramId)} <ExternalLink aria-hidden="true" />
+          </a>
+          <span className="pool-program-divider" aria-hidden="true" />
+          <span>USDC mint</span>
+          <code>{shortKey(moonCreditUsdcMint)}</code>
         </div>
-      </div>
+      </section>
 
       {!readiness.ready && <p className="risk-note">{readiness.reason}</p>}
       <p className="risk-note">
@@ -681,7 +708,11 @@ export function PoolsContentClient() {
         </div>
       )}
       {!error && pools.length > 0 && (
-        <div className="opportunity-filters" role="search" aria-label="Filter live pools">
+        <div
+          className="opportunity-filters pool-filter-bar"
+          role="search"
+          aria-label="Filter live pools"
+        >
           <label className="opportunity-search">
             <Search aria-hidden="true" />
             <span className="sr-only">Search pool or proposal address</span>
@@ -721,7 +752,7 @@ export function PoolsContentClient() {
         </div>
       )}
       {!error && visiblePools.length > 0 && (
-        <section className="onboarding-layout" aria-label="Live pools">
+        <section className="pool-grid" aria-label="Live pools">
           {visiblePools.map((pool) => {
             const target = pool.account.fundingGoal;
             const raised = pool.account.totalContributed;
@@ -751,7 +782,7 @@ export function PoolsContentClient() {
                 ? expectedInvestorPayout(pool, position)
                 : null;
             return (
-              <article className="onboarding-card" key={poolKey}>
+              <article className="pool-card" key={poolKey}>
                 <div className="opportunity-card-top">
                   <span className="eyebrow">LIVE ON-CHAIN POOL</span>
                   <span className={`opportunity-status-badge ${open ? "is-open" : ""}`}>
