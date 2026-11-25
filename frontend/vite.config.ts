@@ -16,7 +16,7 @@ export default defineConfig({
       alias: [{ find: /^node:buffer$/, replacement: "buffer" }],
     },
     server: {
-      allowedHosts: ["sb-72at8zaph08p.vercel.run"],
+      allowedHosts: ["sb-72at8zaph08p.vercel.run", "sb-3m6jmxah493c.vercel.run"],
     },
     optimizeDeps: {
       include: ["buffer"],

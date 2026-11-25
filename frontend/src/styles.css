@@ -1024,8 +1024,91 @@
 }
 @media (max-width: 767px) {
   .container-wide {
-    width: calc(100% - 40px);
+    width: calc(100% - 32px);
   }
+  .header-actions > button:first-child {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    padding: 0;
+    font-size: 0;
+    gap: 0;
+  }
+  .header-actions > button:first-child svg {
+    width: 18px;
+    height: 18px;
+  }
+  .hero-buttons,
+  .cta-actions {
+    flex-wrap: wrap;
+  }
+  .hero-buttons > button,
+  .cta-actions > button {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .hero-credentials {
+    flex-wrap: wrap;
+  }
+  .page-wrap,
+  .workspace,
+  .workspace-body,
+  .workspace-main {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .workspace-header,
+  .workspace-main,
+  .workspace-network-note,
+  .workspace-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .workspace-header > div {
+    min-width: 0;
+    gap: 8px;
+  }
+  .workspace-role-switcher {
+    max-width: min(45vw, 220px);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .workspace-title {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .workspace-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    gap: 4px 16px;
+  }
+  .workspace-tabs .button-nav {
+    flex: 0 0 auto;
+  }
+  .workspace-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .workspace-paths > a,
+  .opportunity-card,
+  .onboarding-card,
+  .readiness-result {
+    min-width: 0;
+  }
+  .opportunity-card-top,
+  .opportunity-progress-label,
+  .opportunity-card-foot {
+    flex-wrap: wrap;
+  }
+  .onboarding-card {
+    padding: 18px;
+  }
+  .site-footer .container-wide {
+    width: calc(100% - 32px);
+  }
+
   .header-row {
     height: 74px;
     gap: 8px;
