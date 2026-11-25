@@ -1,12 +1,16 @@
 import { BN } from "@coral-xyz/anchor";
 
 export function parseUsdcAmount(value: string): BN {
+  const amount = parseUsdcAmountAllowZero(value);
+  if (amount.lte(new BN(0))) throw new Error("USDC amount must be greater than zero.");
+  return amount;
+}
+
+export function parseUsdcAmountAllowZero(value: string): BN {
   const match = /^(0|[1-9]\d*)(?:\.(\d{1,6}))?$/.exec(value.trim());
   if (!match) throw new Error("Enter a USDC amount with up to six decimal places.");
   const [whole, fraction = ""] = match.slice(1);
-  const amount = new BN(`${whole}${fraction.padEnd(6, "0")}`);
-  if (amount.lte(new BN(0))) throw new Error("USDC amount must be greater than zero.");
-  return amount;
+  return new BN(`${whole}${fraction.padEnd(6, "0")}`);
 }
 
 export function validateContributionAmount(
