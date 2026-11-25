@@ -13,7 +13,17 @@ import {
   type TransactionInstruction,
 } from "@solana/web3.js";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { CircleAlert, ExternalLink, Handshake, RefreshCw, Search, Wallet } from "lucide-react";
+import {
+  CheckCircle2,
+  CircleAlert,
+  Clock3,
+  ExternalLink,
+  Handshake,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Wallet,
+} from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -63,6 +73,10 @@ function formatUsdc(amount: BN): string {
   const whole = amount.div(new BN(1_000_000)).toString();
   const fractional = amount.mod(new BN(1_000_000)).toString().padStart(6, "0").replace(/0+$/, "");
   return fractional ? `${whole}.${fractional}` : whole;
+}
+
+function formatProfitShare(basisPoints: number): string {
+  return `${(basisPoints / 100).toFixed(2).replace(/\.?0+$/, "")}%`;
 }
 
 function shortKey(key: PublicKey): string {
@@ -598,6 +612,10 @@ export function PoolsContentClient() {
   }, [poolSearch, poolStatusFilter, pools]);
   const ownProposals = proposals;
   const readiness = getMoonCreditProgramReadiness();
+  const profitShareBps = Number(entrepreneurProfitBps);
+  const validProfitShare =
+    Number.isInteger(profitShareBps) && profitShareBps >= 0 && profitShareBps <= 10_000;
+  const profitSharePreview = validProfitShare ? formatProfitShare(profitShareBps) : "—";
   const openPoolCount = pools.filter(
     (pool) => statusName(pool.account.status).toLowerCase() === "open",
   ).length;
@@ -762,7 +780,7 @@ export function PoolsContentClient() {
               : Math.min(100, raised.mul(new BN(10_000)).div(target).toNumber() / 100);
             const proposal = publicProposalByKey.get(pool.account.proposal.toBase58());
             const profitShare = proposal
-              ? `${(proposal.account.entrepreneurProfitBps / 100).toFixed(2).replace(/\.?0+$/, "")}%`
+              ? formatProfitShare(proposal.account.entrepreneurProfitBps)
               : "Unavailable";
             const poolKey = pool.publicKey.toBase58();
             const position = positionByPool.get(poolKey);
@@ -864,162 +882,295 @@ export function PoolsContentClient() {
         </section>
       )}
 
-      <div className="workspace-section-heading">
-        <h2>My positions</h2>
-        <span>{positions.length} positions</span>
-      </div>
-      {!publicKey ? (
-        <p>Connect a wallet to see your positions.</p>
-      ) : positions.length === 0 ? (
-        <p>No investor positions for this connected wallet.</p>
-      ) : (
-        <div className="mb-10 overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead>
-              <tr>
-                <th className="p-3">Pool</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">Contributed</th>
-                <th className="p-3">Claimed</th>
-                <th className="p-3">Expected payout</th>
-              </tr>
-            </thead>
-            <tbody>
-              {positions.map((position) => {
-                const pool = pools.find((item) => item.publicKey.equals(position.account.pool));
-                const expected = pool ? expectedInvestorPayout(pool, position) : null;
-                return (
-                  <tr key={position.publicKey.toBase58()} className="border-t border-border">
-                    <td className="p-3 font-mono">{shortKey(position.account.pool)}</td>
-                    <td className="p-3">
-                      {pool ? displayStatus(pool.account.status) : "Unavailable"}
-                    </td>
-                    <td className="p-3">{formatUsdc(position.account.contributed)} USDC</td>
-                    <td className="p-3">{position.account.claimed ? "Yes" : "No"}</td>
-                    <td className="p-3">
-                      {expected ? `${formatUsdc(expected)} USDC` : "Pending settlement"}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      <section className="positions-section" aria-labelledby="positions-title">
+        <div className="positions-heading">
+          <div>
+            <p className="proposal-eyebrow">INVESTOR PORTFOLIO</p>
+            <h2 id="positions-title">My positions</h2>
+          </div>
+          <span className="proposal-count">
+            {positions.length} {positions.length === 1 ? "position" : "positions"}
+          </span>
         </div>
-      )}
-
-      <div className="workspace-section-heading">
-        <h2>Entrepreneur proposals</h2>
-        <span>Admin approval required</span>
-      </div>
-      {!entrepreneurRole ? (
-        <div className="workspace-empty">
-          <h2>Entrepreneur role required</h2>
-          <p>
-            Sign in with Solana, then select the entrepreneur role in your profile. The role does
-            not approve proposals automatically.
-          </p>
-          {profileError && <p role="alert">{profileError}</p>}
-          <Button asChild variant="quiet">
-            <Link to="/auth">Sign in with Solana</Link>
-          </Button>
-        </div>
-      ) : (
-        <section className="onboarding-layout">
-          <form
-            className="onboarding-card space-y-4"
-            onSubmit={(event) => void submitProposal(event)}
-          >
-            <h2>Submit a funding proposal</h2>
-            <p>
-              The deployed program stores the target, profit-share basis points, and wallet—not a
-              business description. Proposal approval is performed by the platform authority.
-            </p>
-            <label className="block space-y-2">
-              <span>Funding target (USDC)</span>
-              <Input
-                value={fundingGoal}
-                onChange={(event) => setFundingGoal(event.target.value)}
-                inputMode="decimal"
-                placeholder="1000.00"
-                required
-                disabled={busy}
-              />
-            </label>
-            <label className="block space-y-2">
-              <span>Entrepreneur profit share (basis points)</span>
-              <Input
-                type="number"
-                min="0"
-                max="10000"
-                step="1"
-                value={entrepreneurProfitBps}
-                onChange={(event) => setEntrepreneurProfitBps(event.target.value)}
-                required
-                disabled={busy}
-              />
-            </label>
-            {publicKey && anchorWallet ? (
-              <Button type="submit" variant="gold" disabled={busy || !readiness.ready}>
-                {busy ? "Submitting…" : "Submit for admin approval"}
-              </Button>
-            ) : (
-              <WalletConnectButton />
-            )}
-          </form>
-
-          <div className="onboarding-card">
-            <h2>Your proposals</h2>
-            {!publicKey || ownProposals.length === 0 ? (
-              <p>No proposals for this connected wallet.</p>
-            ) : (
-              <div className="space-y-4">
-                {ownProposals.map((proposal) => {
-                  const key = proposal.publicKey.toBase58();
-                  const hasPool = poolByProposal.has(key);
+        {!publicKey || positions.length === 0 ? (
+          <div className="positions-empty" aria-live="polite">
+            <span className="positions-empty-icon" aria-hidden="true">
+              <Wallet />
+            </span>
+            <div>
+              <h3>
+                {positionsQuery.isFetching
+                  ? "Loading your positions"
+                  : publicKey
+                    ? "No positions yet"
+                    : "Connect your wallet"}
+              </h3>
+              <p>
+                {positionsQuery.isFetching
+                  ? "Checking on-chain contributions for this wallet."
+                  : publicKey
+                    ? "Your pool contributions and payout status will appear here."
+                    : "Connect the wallet you used to contribute to view your on-chain positions."}
+              </p>
+            </div>
+            {!publicKey && !positionsQuery.isFetching && <WalletConnectButton />}
+          </div>
+        ) : (
+          <div className="positions-table-wrap">
+            <table className="positions-table">
+              <thead>
+                <tr>
+                  <th scope="col">Pool</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Contributed</th>
+                  <th scope="col">Claimed</th>
+                  <th scope="col">Expected payout</th>
+                </tr>
+              </thead>
+              <tbody>
+                {positions.map((position) => {
+                  const pool = pools.find((item) => item.publicKey.equals(position.account.pool));
+                  const expected = pool ? expectedInvestorPayout(pool, position) : null;
                   return (
-                    <article key={key} className="border-b border-border pb-4">
-                      <h3>Proposal {shortKey(proposal.publicKey)}</h3>
-                      <p>Target: {formatUsdc(proposal.account.fundingGoal)} USDC</p>
-                      <p>
-                        {proposal.account.approved
-                          ? "Approved by platform authority"
-                          : rejectedProposalKeys.has(key)
-                            ? "Rejected by platform authority"
-                            : "Awaiting platform authority review"}
-                      </p>
-                      {rejectedProposalKeys.has(key) && (
-                        <p className="opportunity-disclosure">
-                          The program records rejection status but does not store review notes or
-                          revision instructions.
-                        </p>
-                      )}
-                      {proposal.account.approved && !hasPool && (
-                        <Button
-                          type="button"
-                          variant="gold"
-                          disabled={busy}
-                          onClick={() => void createPool(proposal)}
-                        >
-                          Create approved pool
-                        </Button>
-                      )}
-                      {hasPool && (
-                        <p>
-                          Pool created:{" "}
-                          {shortKey(
-                            pools.find((pool) => pool.account.proposal.equals(proposal.publicKey))!
-                              .publicKey,
-                          )}
-                        </p>
-                      )}
-                    </article>
+                    <tr key={position.publicKey.toBase58()}>
+                      <td className="font-mono">{shortKey(position.account.pool)}</td>
+                      <td>{pool ? displayStatus(pool.account.status) : "Unavailable"}</td>
+                      <td>{formatUsdc(position.account.contributed)} USDC</td>
+                      <td>{position.account.claimed ? "Claimed" : "Not claimed"}</td>
+                      <td>{expected ? `${formatUsdc(expected)} USDC` : "Pending settlement"}</td>
+                    </tr>
                   );
                 })}
-              </div>
-            )}
+              </tbody>
+            </table>
           </div>
-        </section>
-      )}
+        )}
+      </section>
+
+      <section className="proposal-workspace" aria-labelledby="entrepreneur-proposals-title">
+        <div className="proposal-workspace-heading">
+          <div>
+            <p className="proposal-eyebrow">FUNDING JOURNEY</p>
+            <h2 id="entrepreneur-proposals-title">Entrepreneur proposals</h2>
+            <p>Submit a request, follow its review, and create a pool after approval.</p>
+          </div>
+          <span className="proposal-review-badge">
+            <ShieldCheck aria-hidden="true" />
+            Platform admin review
+          </span>
+        </div>
+        {!entrepreneurRole ? (
+          <div className="workspace-empty entrepreneur-role-empty">
+            <div className="icon-tile">
+              <Handshake aria-hidden="true" />
+            </div>
+            <h2>Entrepreneur role required</h2>
+            <p>
+              Sign in with Solana, then select the entrepreneur role in your profile. The role does
+              not approve proposals automatically.
+            </p>
+            {profileError && <p role="alert">{profileError}</p>}
+            <Button asChild variant="quiet">
+              <Link to="/auth">Sign in with Solana</Link>
+            </Button>
+          </div>
+        ) : (
+          <div className="onboarding-layout proposal-layout">
+            <form
+              className="onboarding-card proposal-form"
+              onSubmit={(event) => void submitProposal(event)}
+            >
+              <div className="proposal-card-heading">
+                <span className="proposal-card-icon" aria-hidden="true">
+                  <Handshake />
+                </span>
+                <div>
+                  <p className="proposal-eyebrow">NEW REQUEST</p>
+                  <h3>Submit a funding proposal</h3>
+                  <p>Set the funding target and profit-sharing split.</p>
+                </div>
+              </div>
+              <div className="proposal-schema-note">
+                <span>What is recorded</span>
+                <p>
+                  The on-chain proposal stores your target, profit share, and wallet—not a business
+                  description.
+                </p>
+              </div>
+              <label className="proposal-field">
+                <span>
+                  Funding target <small>USDC</small>
+                </span>
+                <Input
+                  type="number"
+                  min="0.000001"
+                  step="0.000001"
+                  value={fundingGoal}
+                  onChange={(event) => setFundingGoal(event.target.value)}
+                  inputMode="decimal"
+                  placeholder="1,000.00"
+                  required
+                  disabled={busy}
+                />
+                <small>Enter the amount you are requesting from contributors.</small>
+              </label>
+              <label className="proposal-field">
+                <span>
+                  Entrepreneur profit share <small>Basis points</small>
+                </span>
+                <Input
+                  type="number"
+                  min="0"
+                  max="10000"
+                  step="1"
+                  value={entrepreneurProfitBps}
+                  onChange={(event) => setEntrepreneurProfitBps(event.target.value)}
+                  required
+                  disabled={busy}
+                />
+                <small>
+                  100 basis points equal 1%. Current split: <strong>{profitSharePreview}</strong>
+                </small>
+              </label>
+              <div className="proposal-steps" aria-label="Proposal process">
+                <span className="is-current">
+                  <b>01</b> Submit
+                </span>
+                <span>
+                  <b>02</b> Admin review
+                </span>
+                <span>
+                  <b>03</b> Create pool
+                </span>
+              </div>
+              {publicKey && anchorWallet ? (
+                <Button type="submit" variant="gold" disabled={busy || !readiness.ready}>
+                  {busy ? "Submitting…" : "Submit for admin approval"}
+                </Button>
+              ) : (
+                <WalletConnectButton />
+              )}
+            </form>
+
+            <div className="onboarding-card proposal-list-panel">
+              <div className="proposal-list-heading">
+                <div>
+                  <p className="proposal-eyebrow">ON-CHAIN RECORDS</p>
+                  <h3>Your proposals</h3>
+                </div>
+                <span className="proposal-count">
+                  {ownProposals.length} {ownProposals.length === 1 ? "request" : "requests"}
+                </span>
+              </div>
+              {!publicKey || ownProposals.length === 0 ? (
+                <div className="proposal-list-empty" aria-live="polite">
+                  <span className="proposal-list-empty-icon" aria-hidden="true">
+                    {proposalsQuery.isFetching ? <Clock3 /> : <Handshake />}
+                  </span>
+                  <h4>
+                    {proposalsQuery.isFetching
+                      ? "Loading proposals"
+                      : publicKey
+                        ? "No proposals yet"
+                        : "Connect your wallet"}
+                  </h4>
+                  <p>
+                    {proposalsQuery.isFetching
+                      ? "Reading proposal records from the program."
+                      : publicKey
+                        ? "Submitted proposals and their next steps will appear here."
+                        : "Your proposals are linked to the wallet that submitted them."}
+                  </p>
+                </div>
+              ) : (
+                <div className="proposal-list">
+                  {ownProposals.map((proposal) => {
+                    const key = proposal.publicKey.toBase58();
+                    const hasPool = poolByProposal.has(key);
+                    const rejected = rejectedProposalKeys.has(key);
+                    const approved = proposal.account.approved;
+                    const status = approved ? "approved" : rejected ? "rejected" : "pending";
+                    const statusLabel = approved ? "Approved" : rejected ? "Rejected" : "In review";
+                    const relatedPool = pools.find((pool) =>
+                      pool.account.proposal.equals(proposal.publicKey),
+                    );
+                    return (
+                      <article key={key} className="proposal-record">
+                        <div className="proposal-record-heading">
+                          <div>
+                            <span className="proposal-record-label">FUNDING REQUEST</span>
+                            <h4>Proposal {shortKey(proposal.publicKey)}</h4>
+                          </div>
+                          <span className={`proposal-status is-${status}`}>
+                            {approved ? (
+                              <CheckCircle2 aria-hidden="true" />
+                            ) : (
+                              <Clock3 aria-hidden="true" />
+                            )}
+                            {statusLabel}
+                          </span>
+                        </div>
+                        <div className="proposal-record-metrics">
+                          <div>
+                            <span>Funding target</span>
+                            <strong>{formatUsdc(proposal.account.fundingGoal)} USDC</strong>
+                          </div>
+                          <div>
+                            <span>Profit share</span>
+                            <strong>
+                              {formatProfitShare(proposal.account.entrepreneurProfitBps)}
+                            </strong>
+                          </div>
+                        </div>
+                        <a
+                          className="proposal-explorer-link"
+                          href={`https://explorer.solana.com/address/${key}?cluster=devnet`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          View proposal on Solana Explorer <ExternalLink aria-hidden="true" />
+                        </a>
+                        {rejected && (
+                          <p className="proposal-rejection-note">
+                            The program records rejection status but does not store review notes or
+                            revision instructions.
+                          </p>
+                        )}
+                        {approved && !hasPool && (
+                          <div className="proposal-next-step">
+                            <p>Approved. Create your pool to make it available to contributors.</p>
+                            <Button
+                              type="button"
+                              variant="gold"
+                              disabled={busy}
+                              onClick={() => void createPool(proposal)}
+                            >
+                              Create approved pool
+                            </Button>
+                          </div>
+                        )}
+                        {relatedPool && (
+                          <div className="proposal-pool-created">
+                            <CheckCircle2 aria-hidden="true" />
+                            <span>Pool created</span>
+                            <a
+                              href={`https://explorer.solana.com/address/${relatedPool.publicKey.toBase58()}?cluster=devnet`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {shortKey(relatedPool.publicKey)} <ExternalLink aria-hidden="true" />
+                            </a>
+                          </div>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </section>
       <p className="risk-note">
         <CircleAlert />
         This page uses Devnet USDC. Every financial instruction requires explicit wallet
