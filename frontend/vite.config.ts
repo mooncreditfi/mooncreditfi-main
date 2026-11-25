@@ -7,15 +7,33 @@
 // the build fails. Never add compression (compressPublicAssets, vite-plugin-compression):
 // hosting already compresses at the edge.
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+const browserBufferPath = fileURLToPath(new URL("./node_modules/buffer/index.js", import.meta.url));
+
 export default defineConfig({
+  plugins: [
+    {
+      name: "browser-buffer-polyfill",
+      enforce: "pre",
+      resolveId(source) {
+        if (source === "buffer" || source === "node:buffer") return browserBufferPath;
+      },
+    },
+  ],
   vite: {
-    resolve: {
-      alias: [
-        { find: /^node:buffer$/, replacement: "buffer/" },
-        { find: /^buffer$/, replacement: "buffer/" },
-      ],
+    optimizeDeps: {
+      esbuildOptions: {
+        plugins: [
+          {
+            name: "browser-buffer-polyfill",
+            setup(build) {
+              build.onResolve({ filter: /^(node:)?buffer$/ }, () => ({ path: browserBufferPath }));
+            },
+          },
+        ],
+      },
     },
   },
   tanstackStart: {
