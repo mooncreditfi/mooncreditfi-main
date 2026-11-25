@@ -2257,3 +2257,203 @@
     display: none;
   }
 }
+
+.pool-overview {
+  margin: 30px 0 32px;
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at 100% 0%, color-mix(in oklch, var(--primary) 16%, transparent), transparent 48%),
+    linear-gradient(135deg, color-mix(in oklch, var(--card) 95%, var(--background)), var(--card));
+  box-shadow: var(--shadow-glow);
+}
+.pool-overview-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.pool-overview-heading .eyebrow {
+  margin-bottom: 8px;
+}
+.pool-overview-heading h2 {
+  font-size: clamp(20px, 2.4vw, 26px);
+  font-weight: 700;
+  margin-bottom: 7px;
+}
+.pool-overview-heading > div > p:last-child {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.pool-network-chip {
+  border: 1px solid color-mix(in oklch, var(--success) 40%, var(--border));
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: var(--success);
+  background: color-mix(in oklch, var(--success) 7%, transparent);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.pool-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.pool-summary-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in oklch, var(--border) 85%, transparent);
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--background) 52%, transparent);
+}
+.pool-summary-card > span,
+.pool-summary-card > small {
+  color: var(--muted-foreground);
+  font-size: 10px;
+}
+.pool-summary-card > strong {
+  overflow-wrap: anywhere;
+  font-family: var(--font-display);
+  font-size: clamp(21px, 2.8vw, 30px);
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.pool-program-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding-top: 18px;
+  color: var(--muted-foreground);
+  font-size: 10px;
+}
+.pool-program-line a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--violet-soft);
+}
+.pool-program-line a svg {
+  width: 12px;
+  height: 12px;
+}
+.pool-program-line code {
+  color: var(--foreground);
+  font-size: 10px;
+}
+.pool-program-divider {
+  width: 1px;
+  height: 14px;
+  margin-inline: 4px;
+  background: var(--border);
+}
+.pool-filter-bar {
+  margin-top: 8px;
+  padding: 18px 0 12px;
+}
+.pool-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 16px 0 8px;
+}
+.pool-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: clamp(18px, 2vw, 24px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: linear-gradient(155deg, color-mix(in oklch, var(--card) 96%, var(--primary)), var(--card) 48%);
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+.pool-card:hover {
+  border-color: color-mix(in oklch, var(--primary) 55%, var(--border));
+  transform: translateY(-2px);
+}
+.pool-card h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.pool-card > p {
+  margin-top: -10px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.pool-card > p + p {
+  margin-top: -8px;
+}
+.pool-card .workspace-metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.pool-card .workspace-metrics article {
+  min-height: 98px;
+  padding: 14px;
+  border-radius: 10px;
+  background: color-mix(in oklch, var(--background) 55%, transparent);
+}
+.pool-card .workspace-metrics strong {
+  margin-top: 12px;
+  font-size: clamp(19px, 2.2vw, 24px);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.pool-card label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.pool-card > button {
+  width: 100%;
+}
+@media (max-width: 767px) {
+  .pool-overview {
+    margin-top: 20px;
+    padding: 18px;
+    border-radius: 14px;
+  }
+  .pool-overview-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .pool-summary-grid,
+  .pool-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pool-summary-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 5px 12px;
+    padding: 14px;
+  }
+  .pool-summary-card > strong {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    text-align: right;
+  }
+  .pool-program-divider {
+    display: none;
+  }
+  .pool-filter-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .pool-card {
+    padding: 18px;
+  }
+}
