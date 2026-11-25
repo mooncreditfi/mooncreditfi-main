@@ -35,6 +35,28 @@ const idl = {
       args: [],
     },
     {
+      name: "transferPlatformAuthority",
+      discriminator: [110, 215, 33, 194, 127, 233, 129, 146],
+      accounts: [
+        {
+          name: "config",
+          writable: true,
+          signer: false,
+        },
+        {
+          name: "authority",
+          writable: false,
+          signer: true,
+        },
+      ],
+      args: [
+        {
+          name: "newAuthority",
+          type: "pubkey",
+        },
+      ],
+    },
+    {
       name: "registerEntrepreneur",
       discriminator: [152, 27, 77, 154, 157, 165, 106, 63],
       accounts: [
@@ -589,6 +611,10 @@ const idl = {
       discriminator: [16, 222, 212, 5, 213, 140, 112, 162],
     },
     {
+      name: "platformAuthorityChanged",
+      discriminator: [181, 239, 205, 5, 84, 89, 188, 156],
+    },
+    {
       name: "entrepreneurRegistered",
       discriminator: [157, 5, 252, 220, 252, 170, 143, 139],
     },
@@ -720,6 +746,16 @@ const idl = {
       code: 6014,
       name: "invalidVault",
       msg: "The supplied vault is invalid.",
+    },
+    {
+      code: 6015,
+      name: "invalidAuthority",
+      msg: "The new authority address cannot be the default address.",
+    },
+    {
+      code: 6016,
+      name: "authorityUnchanged",
+      msg: "The new authority must be different from the current authority.",
     },
   ],
   types: [
@@ -971,6 +1007,24 @@ const idl = {
           },
           {
             name: "usdcMint",
+            type: "pubkey",
+            index: false,
+          },
+        ],
+      },
+    },
+    {
+      name: "platformAuthorityChanged",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "previousAuthority",
+            type: "pubkey",
+            index: false,
+          },
+          {
+            name: "newAuthority",
             type: "pubkey",
             index: false,
           },

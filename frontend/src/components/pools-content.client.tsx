@@ -5,7 +5,13 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { useAnchorWallet, useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction } from "@solana/web3.js";
+import {
+  PublicKey,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+  Transaction,
+  type TransactionInstruction,
+} from "@solana/web3.js";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { CircleAlert, ExternalLink, Handshake, RefreshCw, Search, Wallet } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -27,14 +33,21 @@ import {
   POSITION_SEED,
   PROPOSAL_SEED,
   REJECTION_SEED,
+  SETTLEMENT_SEED,
   VAULT_SEED,
 } from "@/lib/mooncredit-program";
-import { parseUsdcAmount, validateContributionAmount } from "@/lib/pool-utils";
+import {
+  parseUsdcAmount,
+  parseUsdcAmountAllowZero,
+  validateContributionAmount,
+} from "@/lib/pool-utils";
+import { calculateEntrepreneurProfit, calculateInvestorPayout } from "@/lib/payouts";
 import { SOLANA_NETWORK } from "@/lib/platform-capabilities";
 import {
   moonCreditQueryKeys,
   useConfig,
   usePools,
+  usePositions,
   useProgram,
   useProposals,
   usePublicProposals,
@@ -44,6 +57,7 @@ import { txToast } from "@/lib/tx-toast";
 
 type PoolProposal = NonNullable<ReturnType<typeof useProposals>["data"]>[number];
 type LivePool = NonNullable<ReturnType<typeof usePools>["data"]>[number];
+type LivePosition = NonNullable<ReturnType<typeof usePositions>["data"]>[number];
 
 function formatUsdc(amount: BN): string {
   const whole = amount.div(new BN(1_000_000)).toString();
@@ -61,8 +75,26 @@ function statusName(status: LivePool["account"]["status"]): string {
   return Object.keys(status)[0] ?? "unknown";
 }
 
+function displayStatus(status: LivePool["account"]["status"]): string {
+  return statusName(status)
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/^./, (first) => first.toUpperCase());
+}
+
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "The request failed. Please try again.";
+}
+
+function expectedInvestorPayout(pool: LivePool, position: LivePosition): BN | null {
+  const status = statusName(pool.account.status).toLowerCase();
+  if (status === "cancelled") return position.account.contributed;
+  if (status !== "settled") return null;
+  return calculateInvestorPayout(
+    position.account.contributed,
+    pool.account.totalContributed,
+    pool.account.totalReturned,
+    10_000 - pool.account.entrepreneurProfitBps,
+  );
 }
 
 export function PoolsContentClient() {
@@ -343,6 +375,202 @@ export function PoolsContentClient() {
     }
   }
 
+  async function activatePool(pool: LivePool) {
+    if (!publicKey || !pool.account.entrepreneur.equals(publicKey)) {
+      toast.error("Only this pool's entrepreneur can activate it.");
+      return;
+    }
+    if (
+      statusName(pool.account.status).toLowerCase() !== "open" ||
+      !pool.account.totalContributed.eq(pool.account.fundingGoal)
+    ) {
+      toast.error("The pool must be open and fully funded before activation.");
+      return;
+    }
+
+    await sendPoolTransaction(`Pool ${shortKey(pool.publicKey)} activated.`, () =>
+      program.methods
+        .activatePool()
+        .accounts({ pool: pool.publicKey, entrepreneur: publicKey })
+        .instruction(),
+    );
+  }
+
+  async function disburseCapital(pool: LivePool) {
+    if (!publicKey || !anchorWallet || !pool.account.entrepreneur.equals(publicKey)) {
+      toast.error("Only this pool's connected entrepreneur can disburse capital.");
+      return;
+    }
+    if (!configQuery.data?.authority.equals(publicKey)) {
+      toast.error(
+        "The current program requires both the entrepreneur and platform authority signatures to disburse capital.",
+      );
+      return;
+    }
+    if (statusName(pool.account.status).toLowerCase() !== "funded") {
+      toast.error("Only funded pools can disburse capital.");
+      return;
+    }
+
+    const entrepreneurTokenAccount = getAssociatedTokenAddressSync(moonCreditUsdcMint, publicKey);
+    await sendPoolTransaction(
+      `${formatUsdc(pool.account.totalContributed)} USDC disbursed for pool ${shortKey(pool.publicKey)}.`,
+      () =>
+        program.methods
+          .disburseCapital()
+          .accounts({
+            config: PublicKey.findProgramAddressSync([CONFIG_SEED], moonCreditProgramId)[0],
+            pool: pool.publicKey,
+            vault: pool.account.vault,
+            usdcMint: moonCreditUsdcMint,
+            entrepreneurTokenAccount,
+            authority: publicKey,
+            entrepreneur: publicKey,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .instruction(),
+      publicKey,
+    );
+  }
+
+  async function submitSettlement(pool: LivePool) {
+    if (!publicKey || !pool.account.entrepreneur.equals(publicKey)) {
+      toast.error("Only this pool's entrepreneur can submit a settlement.");
+      return;
+    }
+    if (statusName(pool.account.status).toLowerCase() !== "active") {
+      toast.error("Only active pools can submit a settlement.");
+      return;
+    }
+
+    const key = pool.publicKey.toBase58();
+    let returnedAmount: BN;
+    try {
+      returnedAmount = parseUsdcAmountAllowZero(settlementAmounts[key] ?? "");
+    } catch (amountError) {
+      toast.error(errorMessage(amountError));
+      return;
+    }
+    const entrepreneurTokenAccount = getAssociatedTokenAddressSync(moonCreditUsdcMint, publicKey);
+    const settlement = PublicKey.findProgramAddressSync(
+      [SETTLEMENT_SEED, pool.publicKey.toBuffer()],
+      moonCreditProgramId,
+    )[0];
+    const signature = await sendPoolTransaction(
+      `Settlement submitted for pool ${shortKey(pool.publicKey)}.`,
+      () =>
+        program.methods
+          .submitSettlement(returnedAmount)
+          .accounts({
+            pool: pool.publicKey,
+            settlement,
+            vault: pool.account.vault,
+            usdcMint: moonCreditUsdcMint,
+            entrepreneurTokenAccount,
+            entrepreneur: publicKey,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          })
+          .instruction(),
+      publicKey,
+    );
+    if (signature) {
+      setSettlementAmounts((current) => ({ ...current, [key]: "" }));
+    }
+  }
+
+  async function claimRefund(pool: LivePool, position: LivePosition) {
+    if (
+      !publicKey ||
+      !position.account.investor.equals(publicKey) ||
+      position.account.claimed ||
+      statusName(pool.account.status).toLowerCase() !== "cancelled"
+    ) {
+      toast.error(
+        "A refund is available only to an unclaimed investor position in a cancelled pool.",
+      );
+      return;
+    }
+    const investorTokenAccount = getAssociatedTokenAddressSync(moonCreditUsdcMint, publicKey);
+    await sendPoolTransaction(
+      `Refund claimed for pool ${shortKey(pool.publicKey)}.`,
+      () =>
+        program.methods
+          .claimRefund()
+          .accounts({
+            pool: pool.publicKey,
+            position: position.publicKey,
+            vault: pool.account.vault,
+            usdcMint: moonCreditUsdcMint,
+            investorTokenAccount,
+            investor: publicKey,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .instruction(),
+      publicKey,
+    );
+  }
+
+  async function claimDistribution(pool: LivePool, position: LivePosition) {
+    if (
+      !publicKey ||
+      !position.account.investor.equals(publicKey) ||
+      position.account.claimed ||
+      statusName(pool.account.status).toLowerCase() !== "settled"
+    ) {
+      toast.error("A distribution is available only to an unclaimed position in a settled pool.");
+      return;
+    }
+    const investorTokenAccount = getAssociatedTokenAddressSync(moonCreditUsdcMint, publicKey);
+    await sendPoolTransaction(
+      `Distribution claimed for pool ${shortKey(pool.publicKey)}.`,
+      () =>
+        program.methods
+          .claimDistribution()
+          .accounts({
+            pool: pool.publicKey,
+            position: position.publicKey,
+            vault: pool.account.vault,
+            usdcMint: moonCreditUsdcMint,
+            investorTokenAccount,
+            investor: publicKey,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .instruction(),
+      publicKey,
+    );
+  }
+
+  async function claimEntrepreneurProfit(pool: LivePool) {
+    if (
+      !publicKey ||
+      !pool.account.entrepreneur.equals(publicKey) ||
+      statusName(pool.account.status).toLowerCase() !== "settled" ||
+      pool.account.entrepreneurClaimed ||
+      pool.account.claimCount !== pool.account.investorCount
+    ) {
+      toast.error("Entrepreneur profit is available after all investor claims are completed.");
+      return;
+    }
+    const entrepreneurTokenAccount = getAssociatedTokenAddressSync(moonCreditUsdcMint, publicKey);
+    await sendPoolTransaction(
+      `Entrepreneur profit claimed for pool ${shortKey(pool.publicKey)}.`,
+      () =>
+        program.methods
+          .claimEntrepreneurProfit()
+          .accounts({
+            pool: pool.publicKey,
+            vault: pool.account.vault,
+            usdcMint: moonCreditUsdcMint,
+            entrepreneurTokenAccount,
+            entrepreneur: publicKey,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .instruction(),
+      publicKey,
+    );
+  }
+
   const poolByProposal = useMemo(
     () => new Set(pools.map((pool) => pool.account.proposal.toBase58())),
     [pools],
@@ -412,6 +640,12 @@ export function PoolsContentClient() {
       </div>
 
       {!readiness.ready && <p className="risk-note">{readiness.reason}</p>}
+      <p className="risk-note">
+        <CircleAlert />
+        This program interface has no on-chain funding or settlement deadlines, Defaulted status, or
+        declare-default instruction. Countdown and time-based default/refund actions are
+        unavailable.
+      </p>
       {recentSignature && (
         <p className="risk-note">
           Latest transaction:{" "}
@@ -502,6 +736,20 @@ export function PoolsContentClient() {
               ? `${(proposal.account.entrepreneurProfitBps / 100).toFixed(2).replace(/\.?0+$/, "")}%`
               : "Unavailable";
             const poolKey = pool.publicKey.toBase58();
+            const position = positionByPool.get(poolKey);
+            const isEntrepreneur = Boolean(
+              publicKey && pool.account.entrepreneur.equals(publicKey),
+            );
+            const canDisburse = Boolean(
+              isEntrepreneur && publicKey && configQuery.data?.authority.equals(publicKey),
+            );
+            const progressBasisPoints = target.isZero()
+              ? 0
+              : Math.min(10_000, raised.mul(new BN(10_000)).div(target).toNumber());
+            const expectedPayout =
+              position && (status === "settled" || status === "cancelled")
+                ? expectedInvestorPayout(pool, position)
+                : null;
             return (
               <article className="onboarding-card" key={poolKey}>
                 <div className="opportunity-card-top">
@@ -576,7 +824,7 @@ export function PoolsContentClient() {
                     disabled={!open || busy}
                     onClick={() => void contribute(pool)}
                   >
-                    Contribute USDC
+                    {busy && open ? "Contributing…" : "Contribute USDC"}
                   </Button>
                 ) : (
                   <WalletConnectButton />
@@ -585,6 +833,49 @@ export function PoolsContentClient() {
             );
           })}
         </section>
+      )}
+
+      <div className="workspace-section-heading">
+        <h2>My positions</h2>
+        <span>{positions.length} positions</span>
+      </div>
+      {!publicKey ? (
+        <p>Connect a wallet to see your positions.</p>
+      ) : positions.length === 0 ? (
+        <p>No investor positions for this connected wallet.</p>
+      ) : (
+        <div className="mb-10 overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead>
+              <tr>
+                <th className="p-3">Pool</th>
+                <th className="p-3">Status</th>
+                <th className="p-3">Contributed</th>
+                <th className="p-3">Claimed</th>
+                <th className="p-3">Expected payout</th>
+              </tr>
+            </thead>
+            <tbody>
+              {positions.map((position) => {
+                const pool = pools.find((item) => item.publicKey.equals(position.account.pool));
+                const expected = pool ? expectedInvestorPayout(pool, position) : null;
+                return (
+                  <tr key={position.publicKey.toBase58()} className="border-t border-border">
+                    <td className="p-3 font-mono">{shortKey(position.account.pool)}</td>
+                    <td className="p-3">
+                      {pool ? displayStatus(pool.account.status) : "Unavailable"}
+                    </td>
+                    <td className="p-3">{formatUsdc(position.account.contributed)} USDC</td>
+                    <td className="p-3">{position.account.claimed ? "Yes" : "No"}</td>
+                    <td className="p-3">
+                      {expected ? `${formatUsdc(expected)} USDC` : "Pending settlement"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
 
       <div className="workspace-section-heading">

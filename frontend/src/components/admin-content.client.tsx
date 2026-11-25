@@ -6,6 +6,17 @@ import { useState } from "react";
 import { RefreshCw, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 import { Workspace, WorkspaceTitle } from "@/components/workspace";
 import { CONFIG_SEED, moonCreditProgramId, REJECTION_SEED } from "@/lib/mooncredit-program";
 import {
@@ -68,6 +79,8 @@ export function AdminContentClient() {
   const settlementsQuery = useAdminSettlements(isAuthority);
   const poolsQuery = usePools();
   const [busyAction, setBusyAction] = useState<string | null>(null);
+  const [authorityAddress, setAuthorityAddress] = useState("");
+  const [pendingAuthority, setPendingAuthority] = useState<PublicKey | null>(null);
 
   async function runTransaction(
     actionKey: string,
@@ -102,6 +115,45 @@ export function AdminContentClient() {
     } catch (error) {
       toast.error(errorMessage(error));
     }
+  }
+
+  function reviewAuthorityTransfer() {
+    let target: PublicKey;
+    try {
+      target = new PublicKey(authorityAddress.trim());
+    } catch {
+      toast.error("Enter a valid Solana public address.");
+      return;
+    }
+
+    if (target.equals(PublicKey.default)) {
+      toast.error("The default address cannot be an authority.");
+      return;
+    }
+    if (publicKey && target.equals(publicKey)) {
+      toast.error("That wallet is already the platform authority.");
+      return;
+    }
+
+    setPendingAuthority(target);
+  }
+
+  function confirmAuthorityTransfer() {
+    if (!pendingAuthority) return;
+    const target = pendingAuthority;
+    setPendingAuthority(null);
+    void runTransaction(
+      "authority-transfer",
+      `Platform authority transferred to ${shortKey(target)}.`,
+      (authority) =>
+        program.methods
+          .transferPlatformAuthority(target)
+          .accounts({
+            config: PublicKey.findProgramAddressSync([CONFIG_SEED], moonCreditProgramId)[0],
+            authority,
+          })
+          .rpc(),
+    );
   }
 
   const refreshing =
@@ -188,6 +240,67 @@ export function AdminContentClient() {
         Proposal records are not yet linked to Supabase business profiles, so private business
         details are unavailable here.
       </p>
+
+      <section className="mb-10 rounded-lg border border-border p-4">
+        <div className="workspace-section-heading">
+          <h2>Platform authority</h2>
+        </div>
+        <p className="mb-4 break-all font-mono text-sm">
+          Current authority: {configQuery.data?.authority.toBase58()}
+        </p>
+        <p className="mb-4 text-sm text-muted-foreground">
+          The new wallet becomes the sole authority immediately after the current wallet signs.
+          Confirm the address carefully; the new authority must connect to administer the platform.
+        </p>
+        <form
+          className="flex flex-col gap-3 sm:flex-row sm:items-end"
+          onSubmit={(event) => {
+            event.preventDefault();
+            reviewAuthorityTransfer();
+          }}
+        >
+          <label className="grid flex-1 gap-2 text-sm font-medium">
+            New authority public address
+            <Input
+              autoComplete="off"
+              spellCheck={false}
+              value={authorityAddress}
+              onChange={(event) => setAuthorityAddress(event.target.value)}
+              placeholder="Solana public address"
+              disabled={busyAction !== null}
+            />
+          </label>
+          <Button type="submit" variant="quiet" disabled={busyAction !== null}>
+            {busyAction === "authority-transfer" ? "Transferring…" : "Review transfer"}
+          </Button>
+        </form>
+      </section>
+
+      <AlertDialog
+        open={pendingAuthority !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingAuthority(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Transfer platform authority?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This immediately grants admin control to {pendingAuthority?.toBase58()}. The current
+              wallet will lose authority after the transaction confirms.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmAuthorityTransfer}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Confirm transfer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {loadError && (
         <p className="mb-6 text-sm text-destructive" role="alert">
