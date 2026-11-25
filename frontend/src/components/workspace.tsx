@@ -19,6 +19,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
+import { SiSolana } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -160,6 +161,7 @@ export function Workspace({ children }: { children: ReactNode }) {
             </Button>
             <span className="network-badge">
               <span />
+              <SiSolana className="network-badge-icon" aria-hidden="true" />
               Solana Devnet
             </span>
             {roles.length > 1 && (

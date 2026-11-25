@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletReadyState } from "@solana/wallet-adapter-base";
 import { Check, Copy, ExternalLink, Loader2, LogOut, Wallet as WalletIcon } from "lucide-react";
+import { SiSolana } from "react-icons/si";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getMoonCreditProfile } from "@/lib/account-profile";
@@ -168,6 +169,7 @@ export function WalletConnectButtonClient({ onAuthenticated }: WalletConnectProp
         <div className="wallet-connected">
           <span className="network-badge">
             <span />
+            <SiSolana className="network-badge-icon" aria-hidden="true" />
             Solana {SOLANA_NETWORK}
           </span>
           <code>{shortAddress(address)}</code>
@@ -211,6 +213,7 @@ export function WalletConnectButtonClient({ onAuthenticated }: WalletConnectProp
           <div className="wallet-network">
             <span className="network-badge">
               <span />
+              <SiSolana className="network-badge-icon" aria-hidden="true" />
               Solana {SOLANA_NETWORK}
             </span>
           </div>

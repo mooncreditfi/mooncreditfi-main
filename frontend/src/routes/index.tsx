@@ -18,6 +18,7 @@ import {
   CircleAlert,
   Network,
 } from "lucide-react";
+import { SiSolana } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { WalletConnectButton } from "@/components/wallet/wallet-connect";
 import {
@@ -68,13 +69,7 @@ function Brand() {
   );
 }
 function SolanaMark() {
-  return (
-    <span className="solana-mark" aria-hidden="true">
-      <i />
-      <i />
-      <i />
-    </span>
-  );
+  return <SiSolana className="solana-mark" aria-hidden="true" />;
 }
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (

@@ -98,9 +98,7 @@
 .credential svg { width:24px; height:24px; color:var(--violet-soft); }
 .credential span { display:block; font-size:10px; color:var(--muted-foreground); line-height:1.55; }
 .credential strong { font-size:11px; color:var(--foreground); display:block; font-weight:600; }
-.solana-mark { width:25px; display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
-.solana-mark i { height:5px; display:block; background:linear-gradient(100deg,var(--success),var(--primary)); transform:skew(-25deg); border-radius:1px; }
-.solana-mark i:nth-child(2) { transform:skew(25deg); }
+.solana-mark { width:25px; height:25px; flex-shrink:0; color:#9945ff; }
 .hero-visual { position:relative; min-width:0; margin-left:-30px; margin-right:-76px; }
 .hero-art { width:100%; display:block; mix-blend-mode:screen; animation:float 7s ease-in-out infinite; }
 .visual-panel { position:absolute; right:12%; bottom:16%; padding:14px 18px; border:1px solid color-mix(in oklch,var(--primary) 65%,var(--border)); background:color-mix(in oklch,var(--secondary) 82%,transparent); backdrop-filter:blur(15px); border-radius:8px; display:flex; align-items:center; gap:12px; box-shadow:var(--shadow-glow); transform:rotate(-4deg); }
@@ -228,6 +226,7 @@
 .workspace-header { min-height:80px; border-bottom:1px solid var(--border); padding:16px 40px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .network-badge { display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--foreground); }
 .network-badge > span { width:6px; height:6px; border-radius:50%; background:var(--success); }
+.network-badge .network-badge-icon { width:15px; height:15px; color:#9945ff; flex-shrink:0; }
 .workspace-network-note { display:flex; align-items:center; gap:8px; padding:12px 40px; color:var(--gold); background:color-mix(in oklch,var(--gold) 4%,var(--background)); font-size:10px; border-bottom:1px solid var(--border); }
 .workspace-network-note svg { flex-shrink:0; }
 .workspace-main { padding:44px 40px 40px; max-width:1280px; width:100%; margin-inline:auto; }
