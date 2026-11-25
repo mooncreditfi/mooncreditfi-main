@@ -28,6 +28,8 @@ export const moonCreditQueryKeys = {
   pools: ["mooncreditfi", "pools"] as const,
   proposals: (wallet: PublicKey | null) =>
     ["mooncreditfi", "proposals", wallet?.toBase58() ?? null] as const,
+  publicProposals: ["mooncreditfi", "public-proposals"] as const,
+  rejections: ["mooncreditfi", "proposal-rejections"] as const,
   positions: (wallet: PublicKey | null) =>
     ["mooncreditfi", "positions", wallet?.toBase58() ?? null] as const,
   config: ["mooncreditfi", "config"] as const,
@@ -71,6 +73,24 @@ export function useProposals() {
         { memcmp: { offset: 8, bytes: publicKey.toBase58() } },
       ]);
     },
+    refetchInterval: 15_000,
+  });
+}
+
+export function usePublicProposals() {
+  const program = useProgram();
+  return useQuery({
+    queryKey: moonCreditQueryKeys.publicProposals,
+    queryFn: () => program.account.businessProposal.all(),
+    refetchInterval: 15_000,
+  });
+}
+
+export function useProposalRejections() {
+  const program = useProgram();
+  return useQuery({
+    queryKey: moonCreditQueryKeys.rejections,
+    queryFn: () => program.account.proposalRejection.all(),
     refetchInterval: 15_000,
   });
 }

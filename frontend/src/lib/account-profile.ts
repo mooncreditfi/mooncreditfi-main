@@ -50,6 +50,7 @@ export async function saveMoonCreditProfile(profile: MoonCreditProfile) {
       city: profile.city,
       profile_image: profile.profile_image ?? null,
       roles: profile.roles,
+      updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },
   );

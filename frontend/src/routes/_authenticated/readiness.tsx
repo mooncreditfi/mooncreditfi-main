@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState, type FormEvent } from "react";
-import { CircleAlert, ClipboardCheck, Loader2, LogOut, Sparkles } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CircleAlert, ClipboardCheck, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Workspace, WorkspaceTitle } from "@/components/workspace";
 import { pageMetadata } from "@/lib/page-metadata";
-import { supabase } from "@/integrations/supabase/client";
 import {
   generateAssessment,
   listAssessments,
@@ -42,17 +42,18 @@ const fields: { name: keyof ReadinessInput; label: string; type?: string; area?:
 function Readiness() {
   const list = useServerFn(listAssessments);
   const generate = useServerFn(generateAssessment);
-  const [items, setItems] = useState<Assessment[]>([]);
+  const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
-  const [active, setActive] = useState<Assessment | null>(null);
-  useEffect(() => {
-    list()
-      .then((r) => {
-        setItems(r);
-        setActive(r[0] ?? null);
-      })
-      .catch(() => toast.error("Could not load your checklists."));
-  }, [list]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const {
+    data: items = [],
+    isLoading,
+    error: loadError,
+  } = useQuery({
+    queryKey: ["readiness-assessments"],
+    queryFn: list,
+  });
+  const active = items.find((item) => item.id === activeId) ?? items[0] ?? null;
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -68,8 +69,8 @@ function Readiness() {
           investor_profit_share_pct: Number(f["investor_profit_share_pct"]),
         } as ReadinessInput,
       });
-      setItems((s) => [row, ...s]);
-      setActive(row);
+      setActiveId(row.id);
+      await queryClient.invalidateQueries({ queryKey: ["readiness-assessments"] });
       toast.success("Your checklist is ready.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong.");
@@ -84,20 +85,7 @@ function Readiness() {
         eyebrow="ENTREPRENEUR WORKSPACE"
         title="Application readiness"
         description="Tell us about your business and financing goals. We'll suggest what to prepare before applying."
-      >
-        <Button
-          variant="nav"
-          onClick={() =>
-            void supabase.auth.signOut().then(({ error }) => {
-              if (error) toast.error(error.message);
-              else location.assign("/auth");
-            })
-          }
-        >
-          <LogOut />
-          Sign out
-        </Button>
-      </WorkspaceTitle>
+      />
       <div className="readiness-grid">
         <form className="readiness-form" onSubmit={submit}>
           {fields.map((f) => (
@@ -111,7 +99,7 @@ function Readiness() {
                   type={f.type ?? "text"}
                   required
                   min={f.type ? 0 : undefined}
-                  step="any"
+                  step={f.name === "years_operating" || f.name === "duration_months" ? 1 : "any"}
                 />
               )}
             </label>
@@ -121,13 +109,32 @@ function Readiness() {
             {busy ? "Preparing your checklist…" : "Generate checklist"}
           </Button>
         </form>
-        <section className="readiness-result">
-          {active ? (
+        <section className="readiness-result" aria-live="polite">
+          {loadError ? (
+            <div className="workspace-empty" role="alert">
+              <h2>Could not load saved checklists</h2>
+              <p>{loadError instanceof Error ? loadError.message : "Please try again."}</p>
+              <Button
+                variant="quiet"
+                onClick={() =>
+                  void queryClient.invalidateQueries({ queryKey: ["readiness-assessments"] })
+                }
+              >
+                Retry
+              </Button>
+            </div>
+          ) : isLoading ? (
+            <p>Loading your saved checklists…</p>
+          ) : active ? (
             <>
-              <div className="readiness-score">
-                <strong>{active.readiness_score ?? "—"}</strong>
-                <span>/100 readiness · {active.business_name}</span>
+              <div className="readiness-score" aria-label="Assessment status">
+                <strong>Not scored</strong>
+                <span>{active.business_name} · AI-generated preparation guidance</span>
               </div>
+              <p className="readiness-disclosure">
+                MoonCreditFi has not verified your financial records, identity, or business
+                documents. This checklist is not a credit score or funding decision.
+              </p>
               <p>{active.summary}</p>
               <ul>
                 {active.checklist.map((c, i) => (
@@ -151,7 +158,7 @@ function Readiness() {
                       key={a.id}
                       variant="nav"
                       className={a.id === active.id ? "selected" : ""}
-                      onClick={() => setActive(a)}
+                      onClick={() => setActiveId(a.id)}
                     >
                       {a.business_name} · {new Date(a.created_at).toLocaleDateString()}
                     </Button>
