@@ -20,6 +20,10 @@ describe("MoonCreditFi Anchor client", () => {
     expect(typeof Reflect.get(program.methods, "createPool")).toBe("function");
     expect(typeof Reflect.get(program.methods, "contribute")).toBe("function");
     expect(typeof Reflect.get(program.methods, "transferPlatformAuthority")).toBe("function");
+    expect(typeof Reflect.get(program.methods, "rejectSettlement")).toBe("function");
+    expect(typeof Reflect.get(program.methods, "cancelExpiredPool")).toBe("function");
+    expect(typeof Reflect.get(program.methods, "depositRecovery")).toBe("function");
+    expect(typeof Reflect.get(program.methods, "finalizeDefault")).toBe("function");
     expect(Reflect.get(program.account, "mudarabahPool")).toBeDefined();
     expect(Reflect.get(program.account, "proposalRejection")).toBeDefined();
     expect(
@@ -43,6 +47,7 @@ describe("MoonCreditFi Anchor client", () => {
       Array.from({ length: 32 }, () => 1),
       new BN(1_000_000),
       2_000,
+      new BN(90 * 24 * 60 * 60),
     ]);
     const accounts = Reflect.get(builder, "accounts");
     const configured = Reflect.apply(accounts, builder, [
@@ -60,7 +65,10 @@ describe("MoonCreditFi Anchor client", () => {
     if (!(instruction instanceof TransactionInstruction)) return;
     expect(instruction.programId.toBase58()).toBe(moonCreditIdl.address);
     expect(instruction.keys.some((key) => key.isSigner)).toBe(true);
-    expect(instruction.data.length).toBeGreaterThan(8);
+    expect(instruction.data).toHaveLength(58);
+    expect(Buffer.from(instruction.data.subarray(50))).toEqual(
+      new BN(90 * 24 * 60 * 60).toArrayLike(Buffer, "le", 8),
+    );
   });
 
   it("encodes authority transfers with the current authority as signer", async () => {

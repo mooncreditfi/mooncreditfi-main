@@ -161,6 +161,7 @@ export function PoolsContentClient() {
   const [entrepreneurRole, setEntrepreneurRole] = useState(false);
   const [fundingGoal, setFundingGoal] = useState("");
   const [entrepreneurProfitBps, setEntrepreneurProfitBps] = useState("2000");
+  const [termDays, setTermDays] = useState("90");
   const [contributionAmounts, setContributionAmounts] = useState<Record<string, string>>({});
   const [poolSearch, setPoolSearch] = useState("");
   const [poolStatusFilter, setPoolStatusFilter] = useState("all");
@@ -213,6 +214,7 @@ export function PoolsContentClient() {
     }
     let goal: BN;
     const share = Number(entrepreneurProfitBps);
+    const businessTermDays = Number(termDays);
     try {
       goal = parseUsdcAmount(fundingGoal);
     } catch (amountError) {
@@ -221,6 +223,10 @@ export function PoolsContentClient() {
     }
     if (!Number.isInteger(share) || share < 0 || share > 10_000) {
       toast.error("Profit share must be between 0 and 10,000 basis points.");
+      return;
+    }
+    if (!Number.isInteger(businessTermDays) || businessTermDays < 30 || businessTermDays > 365) {
+      toast.error("Business term must be between 30 and 365 days.");
       return;
     }
 
@@ -253,7 +259,7 @@ export function PoolsContentClient() {
       )[0];
       transaction.add(
         await program.methods
-          .createProposal(businessId, goal, share)
+          .createProposal(businessId, goal, share, new BN(businessTermDays * 24 * 60 * 60))
           .accounts({
             entrepreneurProfile,
             proposal: proposalAddress,
@@ -285,6 +291,12 @@ export function PoolsContentClient() {
     }
     if (!proposal.account.approved) {
       toast.error("A platform admin must approve this proposal before a pool can be created.");
+      return;
+    }
+    if (proposal.account.termSeconds === null) {
+      toast.error(
+        "This legacy proposal has no recorded business term. Submit a new proposal to create a pool.",
+      );
       return;
     }
     setBusy(true);
@@ -1012,6 +1024,22 @@ export function PoolsContentClient() {
               </label>
               <label className="proposal-field">
                 <span>
+                  Business term <small>Days</small>
+                </span>
+                <Input
+                  type="number"
+                  min="30"
+                  max="365"
+                  step="1"
+                  value={termDays}
+                  onChange={(event) => setTermDays(event.target.value)}
+                  required
+                  disabled={busy}
+                />
+                <small>Choose a term from 30 to 365 days.</small>
+              </label>
+              <label className="proposal-field">
+                <span>
                   Entrepreneur profit share <small>Basis points</small>
                 </span>
                 <Input
@@ -1117,6 +1145,14 @@ export function PoolsContentClient() {
                             <span>Profit share</span>
                             <strong>
                               {formatProfitShare(proposal.account.entrepreneurProfitBps)}
+                            </strong>
+                          </div>
+                          <div>
+                            <span>Business term</span>
+                            <strong>
+                              {proposal.account.termSeconds === null
+                                ? "Legacy record"
+                                : `${proposal.account.termSeconds.div(new BN(86_400)).toString()} days`}
                             </strong>
                           </div>
                         </div>
