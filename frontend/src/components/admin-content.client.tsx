@@ -127,9 +127,11 @@ export function AdminContentClient() {
       (actionKey.startsWith("approve:") || actionKey.startsWith("reject:")) &&
       !proposalInstructionsReady
     ) {
+      const compatibility = proposalInstructionCompatibility.data;
       toast.error(
-        proposalInstructionCompatibility.data?.reason ??
-          "Could not verify the deployed proposal instructions. Refresh and try again.",
+        compatibility && !compatibility.ready
+          ? compatibility.reason
+          : "Could not verify the deployed proposal instructions. Refresh and try again.",
       );
       return;
     }
