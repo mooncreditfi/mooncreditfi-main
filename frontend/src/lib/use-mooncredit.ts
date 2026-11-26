@@ -1,4 +1,4 @@
-import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, BN, Program, utils } from "@coral-xyz/anchor";
 import { getMint } from "@solana/spl-token";
 import { useAnchorWallet, useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useQuery } from "@tanstack/react-query";
@@ -38,6 +38,75 @@ export const moonCreditQueryKeys = {
   adminSettlements: ["mooncreditfi", "admin", "settlements"] as const,
 };
 
+type BusinessProposalAccount = {
+  entrepreneur: PublicKey;
+  businessId: number[];
+  fundingGoal: BN;
+  entrepreneurProfitBps: number;
+  termSeconds: BN | null;
+  approved: boolean;
+  bump: number;
+};
+
+export type BusinessProposalRecord = {
+  publicKey: PublicKey;
+  account: BusinessProposalAccount;
+};
+
+const LEGACY_BUSINESS_PROPOSAL_SIZE = 84;
+const CURRENT_BUSINESS_PROPOSAL_SIZE = 92;
+
+async function fetchBusinessProposals(program: Program<Mooncreditfi>) {
+  const discriminator = moonCreditIdl.accounts.find(
+    (account) => account.name === "businessProposal",
+  )?.discriminator;
+  if (!discriminator) throw new Error("The bundled IDL is missing the business proposal account.");
+
+  const accounts = await program.provider.connection.getProgramAccounts(program.programId, {
+    commitment: "confirmed",
+    filters: [
+      {
+        memcmp: {
+          offset: 0,
+          bytes: utils.bytes.bs58.encode(Uint8Array.from(discriminator)),
+        },
+      },
+    ],
+  });
+
+  return accounts.map(({ pubkey, account }) => {
+    const data = new Uint8Array(account.data);
+    if (data.length === CURRENT_BUSINESS_PROPOSAL_SIZE) {
+      return {
+        publicKey: pubkey,
+        account: program.coder.accounts.decode(
+          "businessProposal",
+          account.data,
+        ) as BusinessProposalAccount,
+      };
+    }
+
+    if (data.length === LEGACY_BUSINESS_PROPOSAL_SIZE) {
+      return {
+        publicKey: pubkey,
+        account: {
+          entrepreneur: new PublicKey(data.subarray(8, 40)),
+          businessId: Array.from(data.subarray(40, 72)),
+          fundingGoal: new BN(data.subarray(72, 80), "le"),
+          entrepreneurProfitBps: data[80]! | (data[81]! << 8),
+          termSeconds: null,
+          approved: data[82] === 1,
+          bump: data[83]!,
+        },
+      };
+    }
+
+    throw new Error(
+      `Unexpected business proposal account size ${data.length} for ${pubkey.toBase58()}.`,
+    );
+  });
+}
+
 export function useProgram(): Program<Mooncreditfi> {
   const { connection } = useConnection();
   const anchorWallet = useAnchorWallet();
@@ -67,11 +136,10 @@ export function useProposals() {
   return useQuery({
     queryKey: moonCreditQueryKeys.proposals(publicKey),
     enabled: publicKey !== null,
-    queryFn: () => {
-      if (!publicKey) return Promise.resolve([]);
-      return program.account.businessProposal.all([
-        { memcmp: { offset: 8, bytes: publicKey.toBase58() } },
-      ]);
+    queryFn: async () => {
+      if (!publicKey) return [];
+      const proposals = await fetchBusinessProposals(program);
+      return proposals.filter(({ account }) => account.entrepreneur.equals(publicKey));
     },
     refetchInterval: 15_000,
   });
@@ -81,7 +149,7 @@ export function usePublicProposals() {
   const program = useProgram();
   return useQuery({
     queryKey: moonCreditQueryKeys.publicProposals,
-    queryFn: () => program.account.businessProposal.all(),
+    queryFn: () => fetchBusinessProposals(program),
     refetchInterval: 15_000,
   });
 }
@@ -142,9 +210,7 @@ export function useAdminProposals(authority: PublicKey | null) {
     queryFn: async () => {
       if (!authority) return [];
       const [proposals, rejections] = await Promise.all([
-        program.account.businessProposal.all([
-          { memcmp: { offset: 8 + 32 + 32 + 8 + 2, bytes: "1" } },
-        ]),
+        fetchBusinessProposals(program),
         program.account.proposalRejection.all([
           { memcmp: { offset: 8 + 32, bytes: authority.toBase58() } },
         ]),

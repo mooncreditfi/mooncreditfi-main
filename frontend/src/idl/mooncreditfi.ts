@@ -1,4 +1,4 @@
-// Generated from mooncreditfi.json using Anchor's camel-case IDL normalization.
+// Generated from mooncreditfi-deployed.json using Anchor's IDL normalization.
 const idl = {
   address: "6LVAYFDRrTHSiHZqMWr4tybZNRi755HsoHgeku985pYx",
   metadata: {
@@ -117,6 +117,10 @@ const idl = {
         {
           name: "entrepreneurProfitBps",
           type: "u16",
+        },
+        {
+          name: "termSeconds",
+          type: "i64",
         },
       ],
     },
@@ -432,6 +436,53 @@ const idl = {
       args: [],
     },
     {
+      name: "rejectSettlement",
+      discriminator: [41, 221, 21, 212, 168, 118, 18, 181],
+      accounts: [
+        {
+          name: "config",
+          writable: false,
+          signer: false,
+        },
+        {
+          name: "pool",
+          writable: true,
+          signer: false,
+        },
+        {
+          name: "settlement",
+          writable: true,
+          signer: false,
+        },
+        {
+          name: "vault",
+          writable: true,
+          signer: false,
+        },
+        {
+          name: "usdcMint",
+          writable: false,
+          signer: false,
+        },
+        {
+          name: "entrepreneurTokenAccount",
+          writable: true,
+          signer: false,
+        },
+        {
+          name: "authority",
+          writable: false,
+          signer: true,
+        },
+        {
+          name: "tokenProgram",
+          writable: false,
+          signer: false,
+        },
+      ],
+      args: [],
+    },
+    {
       name: "claimDistribution",
       discriminator: [204, 156, 94, 85, 2, 125, 232, 180],
       accounts: [
@@ -533,6 +584,18 @@ const idl = {
       args: [],
     },
     {
+      name: "cancelExpiredPool",
+      discriminator: [64, 205, 190, 225, 87, 167, 58, 38],
+      accounts: [
+        {
+          name: "pool",
+          writable: true,
+          signer: false,
+        },
+      ],
+      args: [],
+    },
+    {
       name: "claimRefund",
       discriminator: [15, 16, 30, 161, 255, 228, 97, 60],
       accounts: [
@@ -574,6 +637,72 @@ const idl = {
       ],
       args: [],
     },
+    {
+      name: "triggerDefault",
+      discriminator: [101, 124, 194, 181, 119, 246, 180, 8],
+      accounts: [
+        {
+          name: "pool",
+          writable: true,
+          signer: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "depositRecovery",
+      discriminator: [241, 201, 202, 228, 112, 117, 207, 84],
+      accounts: [
+        {
+          name: "pool",
+          writable: true,
+          signer: false,
+        },
+        {
+          name: "vault",
+          writable: true,
+          signer: false,
+        },
+        {
+          name: "usdcMint",
+          writable: false,
+          signer: false,
+        },
+        {
+          name: "depositorTokenAccount",
+          writable: true,
+          signer: false,
+        },
+        {
+          name: "depositor",
+          writable: true,
+          signer: true,
+        },
+        {
+          name: "tokenProgram",
+          writable: false,
+          signer: false,
+        },
+      ],
+      args: [
+        {
+          name: "amount",
+          type: "u64",
+        },
+      ],
+    },
+    {
+      name: "finalizeDefault",
+      discriminator: [15, 92, 148, 73, 14, 190, 65, 19],
+      accounts: [
+        {
+          name: "pool",
+          writable: true,
+          signer: false,
+        },
+      ],
+      args: [],
+    },
   ],
   accounts: [
     {
@@ -603,159 +732,6 @@ const idl = {
     {
       name: "settlementRecord",
       discriminator: [172, 159, 67, 74, 96, 85, 37, 205],
-    },
-  ],
-  events: [
-    {
-      name: "platformInitialized",
-      discriminator: [16, 222, 212, 5, 213, 140, 112, 162],
-    },
-    {
-      name: "platformAuthorityChanged",
-      discriminator: [181, 239, 205, 5, 84, 89, 188, 156],
-    },
-    {
-      name: "entrepreneurRegistered",
-      discriminator: [157, 5, 252, 220, 252, 170, 143, 139],
-    },
-    {
-      name: "proposalCreated",
-      discriminator: [186, 8, 160, 108, 81, 13, 51, 206],
-    },
-    {
-      name: "proposalApproved",
-      discriminator: [70, 49, 155, 228, 157, 43, 88, 49],
-    },
-    {
-      name: "proposalRejected",
-      discriminator: [77, 15, 161, 38, 240, 201, 24, 208],
-    },
-    {
-      name: "poolCreated",
-      discriminator: [202, 44, 41, 88, 104, 220, 157, 82],
-    },
-    {
-      name: "contributionMade",
-      discriminator: [81, 218, 72, 109, 93, 96, 131, 199],
-    },
-    {
-      name: "poolFunded",
-      discriminator: [164, 221, 242, 68, 164, 64, 24, 214],
-    },
-    {
-      name: "capitalDisbursed",
-      discriminator: [146, 41, 200, 210, 255, 8, 104, 189],
-    },
-    {
-      name: "settlementSubmitted",
-      discriminator: [128, 245, 200, 67, 17, 89, 204, 82],
-    },
-    {
-      name: "settlementApproved",
-      discriminator: [11, 13, 1, 163, 187, 57, 161, 6],
-    },
-    {
-      name: "investorClaimed",
-      discriminator: [250, 242, 56, 218, 135, 41, 60, 247],
-    },
-    {
-      name: "entrepreneurProfitClaimed",
-      discriminator: [186, 252, 35, 153, 14, 207, 68, 201],
-    },
-    {
-      name: "poolCancelled",
-      discriminator: [204, 15, 86, 4, 124, 97, 170, 173],
-    },
-    {
-      name: "investorRefunded",
-      discriminator: [120, 193, 178, 19, 245, 11, 192, 48],
-    },
-  ],
-  errors: [
-    {
-      code: 6000,
-      name: "invalidAmount",
-      msg: "The amount must be greater than zero.",
-    },
-    {
-      code: 6001,
-      name: "mathOverflow",
-      msg: "Arithmetic overflow.",
-    },
-    {
-      code: 6002,
-      name: "invalidMint",
-      msg: "The supplied mint is not the configured USDC mint.",
-    },
-    {
-      code: 6003,
-      name: "invalidMintDecimals",
-      msg: "The mint must use six decimals.",
-    },
-    {
-      code: 6004,
-      name: "invalidProfitShare",
-      msg: "The profit share must be between 0 and 10,000 basis points.",
-    },
-    {
-      code: 6005,
-      name: "unauthorized",
-      msg: "The caller is not authorized for this action.",
-    },
-    {
-      code: 6006,
-      name: "alreadyApproved",
-      msg: "The proposal has already been approved.",
-    },
-    {
-      code: 6007,
-      name: "proposalNotApproved",
-      msg: "The proposal has not been approved.",
-    },
-    {
-      code: 6008,
-      name: "proposalRejected",
-      msg: "The proposal has been rejected.",
-    },
-    {
-      code: 6009,
-      name: "invalidPoolStatus",
-      msg: "The pool is not in the required state.",
-    },
-    {
-      code: 6010,
-      name: "fundingGoalExceeded",
-      msg: "The contribution would exceed the funding goal.",
-    },
-    {
-      code: 6011,
-      name: "fundingGoalNotReached",
-      msg: "The pool has not reached its funding goal.",
-    },
-    {
-      code: 6012,
-      name: "alreadyClaimed",
-      msg: "This investor has already claimed.",
-    },
-    {
-      code: 6013,
-      name: "investorClaimsPending",
-      msg: "All investor claims must be completed first.",
-    },
-    {
-      code: 6014,
-      name: "invalidVault",
-      msg: "The supplied vault is invalid.",
-    },
-    {
-      code: 6015,
-      name: "invalidAuthority",
-      msg: "The new authority address cannot be the default address.",
-    },
-    {
-      code: 6016,
-      name: "authorityUnchanged",
-      msg: "The new authority must be different from the current authority.",
     },
   ],
   types: [
@@ -817,6 +793,10 @@ const idl = {
           {
             name: "entrepreneurProfitBps",
             type: "u16",
+          },
+          {
+            name: "termSeconds",
+            type: "i64",
           },
           {
             name: "approved",
@@ -885,6 +865,22 @@ const idl = {
           {
             name: "entrepreneurProfitBps",
             type: "u16",
+          },
+          {
+            name: "termSeconds",
+            type: "i64",
+          },
+          {
+            name: "fundingDeadline",
+            type: "i64",
+          },
+          {
+            name: "disbursedAt",
+            type: "i64",
+          },
+          {
+            name: "maturityTimestamp",
+            type: "i64",
           },
           {
             name: "status",
@@ -963,6 +959,14 @@ const idl = {
             type: "bool",
           },
           {
+            name: "submitted",
+            type: "bool",
+          },
+          {
+            name: "rejected",
+            type: "bool",
+          },
+          {
             name: "bump",
             type: "u8",
           },
@@ -991,6 +995,12 @@ const idl = {
           },
           {
             name: "cancelled",
+          },
+          {
+            name: "defaulted",
+          },
+          {
+            name: "defaultFinalized",
           },
         ],
       },
@@ -1069,6 +1079,11 @@ const idl = {
             type: "u16",
             index: false,
           },
+          {
+            name: "termSeconds",
+            type: "i64",
+            index: false,
+          },
         ],
       },
     },
@@ -1126,6 +1141,16 @@ const idl = {
           {
             name: "fundingGoal",
             type: "u64",
+            index: false,
+          },
+          {
+            name: "fundingDeadline",
+            type: "i64",
+            index: false,
+          },
+          {
+            name: "termSeconds",
+            type: "i64",
             index: false,
           },
         ],
@@ -1197,6 +1222,16 @@ const idl = {
             type: "u64",
             index: false,
           },
+          {
+            name: "disbursedAt",
+            type: "i64",
+            index: false,
+          },
+          {
+            name: "maturityTimestamp",
+            type: "i64",
+            index: false,
+          },
         ],
       },
     },
@@ -1230,6 +1265,29 @@ const idl = {
           },
           {
             name: "returnedAmount",
+            type: "u64",
+            index: false,
+          },
+        ],
+      },
+    },
+    {
+      name: "settlementRejected",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "pool",
+            type: "pubkey",
+            index: false,
+          },
+          {
+            name: "entrepreneur",
+            type: "pubkey",
+            index: false,
+          },
+          {
+            name: "refundedAmount",
             type: "u64",
             index: false,
           },
@@ -1317,6 +1375,294 @@ const idl = {
           },
         ],
       },
+    },
+    {
+      name: "defaultTriggered",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "pool",
+            type: "pubkey",
+            index: false,
+          },
+          {
+            name: "maturityTimestamp",
+            type: "i64",
+            index: false,
+          },
+        ],
+      },
+    },
+    {
+      name: "recoveryDeposited",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "pool",
+            type: "pubkey",
+            index: false,
+          },
+          {
+            name: "depositor",
+            type: "pubkey",
+            index: false,
+          },
+          {
+            name: "amount",
+            type: "u64",
+            index: false,
+          },
+          {
+            name: "totalRecovered",
+            type: "u64",
+            index: false,
+          },
+        ],
+      },
+    },
+    {
+      name: "defaultFinalized",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "pool",
+            type: "pubkey",
+            index: false,
+          },
+          {
+            name: "totalRecovered",
+            type: "u64",
+            index: false,
+          },
+        ],
+      },
+    },
+  ],
+  events: [
+    {
+      name: "platformInitialized",
+      discriminator: [16, 222, 212, 5, 213, 140, 112, 162],
+    },
+    {
+      name: "platformAuthorityChanged",
+      discriminator: [181, 239, 205, 5, 84, 89, 188, 156],
+    },
+    {
+      name: "entrepreneurRegistered",
+      discriminator: [157, 5, 252, 220, 252, 170, 143, 139],
+    },
+    {
+      name: "proposalCreated",
+      discriminator: [186, 8, 160, 108, 81, 13, 51, 206],
+    },
+    {
+      name: "proposalApproved",
+      discriminator: [70, 49, 155, 228, 157, 43, 88, 49],
+    },
+    {
+      name: "proposalRejected",
+      discriminator: [77, 15, 161, 38, 240, 201, 24, 208],
+    },
+    {
+      name: "poolCreated",
+      discriminator: [202, 44, 41, 88, 104, 220, 157, 82],
+    },
+    {
+      name: "contributionMade",
+      discriminator: [81, 218, 72, 109, 93, 96, 131, 199],
+    },
+    {
+      name: "poolFunded",
+      discriminator: [164, 221, 242, 68, 164, 64, 24, 214],
+    },
+    {
+      name: "capitalDisbursed",
+      discriminator: [146, 41, 200, 210, 255, 8, 104, 189],
+    },
+    {
+      name: "settlementSubmitted",
+      discriminator: [128, 245, 200, 67, 17, 89, 204, 82],
+    },
+    {
+      name: "settlementApproved",
+      discriminator: [11, 13, 1, 163, 187, 57, 161, 6],
+    },
+    {
+      name: "settlementRejected",
+      discriminator: [150, 187, 194, 237, 234, 74, 188, 41],
+    },
+    {
+      name: "investorClaimed",
+      discriminator: [250, 242, 56, 218, 135, 41, 60, 247],
+    },
+    {
+      name: "entrepreneurProfitClaimed",
+      discriminator: [186, 252, 35, 153, 14, 207, 68, 201],
+    },
+    {
+      name: "poolCancelled",
+      discriminator: [204, 15, 86, 4, 124, 97, 170, 173],
+    },
+    {
+      name: "investorRefunded",
+      discriminator: [120, 193, 178, 19, 245, 11, 192, 48],
+    },
+    {
+      name: "defaultTriggered",
+      discriminator: [112, 132, 187, 249, 75, 27, 47, 200],
+    },
+    {
+      name: "recoveryDeposited",
+      discriminator: [20, 108, 106, 219, 241, 114, 18, 245],
+    },
+    {
+      name: "defaultFinalized",
+      discriminator: [16, 219, 142, 97, 189, 120, 23, 1],
+    },
+  ],
+  errors: [
+    {
+      code: 6000,
+      name: "invalidAmount",
+      msg: "The amount must be greater than zero.",
+    },
+    {
+      code: 6001,
+      name: "mathOverflow",
+      msg: "Arithmetic overflow.",
+    },
+    {
+      code: 6002,
+      name: "invalidMint",
+      msg: "The supplied mint is not the configured pool mint.",
+    },
+    {
+      code: 6003,
+      name: "invalidMintDecimals",
+      msg: "The mint must use six decimals.",
+    },
+    {
+      code: 6004,
+      name: "invalidProfitShare",
+      msg: "The profit share must be between 0 and 10,000 basis points.",
+    },
+    {
+      code: 6005,
+      name: "unauthorized",
+      msg: "The caller is not authorized for this action.",
+    },
+    {
+      code: 6006,
+      name: "alreadyApproved",
+      msg: "The proposal has already been approved.",
+    },
+    {
+      code: 6007,
+      name: "proposalNotApproved",
+      msg: "The proposal has not been approved.",
+    },
+    {
+      code: 6008,
+      name: "proposalRejected",
+      msg: "The proposal has been rejected.",
+    },
+    {
+      code: 6009,
+      name: "invalidPoolStatus",
+      msg: "The pool is not in the required state.",
+    },
+    {
+      code: 6010,
+      name: "fundingGoalExceeded",
+      msg: "The contribution would exceed the funding goal.",
+    },
+    {
+      code: 6011,
+      name: "fundingGoalNotReached",
+      msg: "The pool has not reached its funding goal.",
+    },
+    {
+      code: 6012,
+      name: "alreadyClaimed",
+      msg: "This investor has already claimed.",
+    },
+    {
+      code: 6013,
+      name: "investorClaimsPending",
+      msg: "All investor claims must be completed first.",
+    },
+    {
+      code: 6014,
+      name: "invalidVault",
+      msg: "The supplied vault is invalid.",
+    },
+    {
+      code: 6015,
+      name: "invalidAuthority",
+      msg: "The new authority address cannot be the default address.",
+    },
+    {
+      code: 6016,
+      name: "authorityUnchanged",
+      msg: "The new authority must be different from the current authority.",
+    },
+    {
+      code: 6017,
+      name: "invalidBusinessTerm",
+      msg: "The business term must be between 30 and 365 days.",
+    },
+    {
+      code: 6018,
+      name: "fundingDeadlinePassed",
+      msg: "The pool funding deadline has passed.",
+    },
+    {
+      code: 6019,
+      name: "fundingDeadlineNotReached",
+      msg: "The pool funding deadline has not yet passed.",
+    },
+    {
+      code: 6020,
+      name: "fundingGoalReached",
+      msg: "The funding goal has already been reached.",
+    },
+    {
+      code: 6021,
+      name: "businessNotMatured",
+      msg: "The business has not reached its maturity date.",
+    },
+    {
+      code: 6022,
+      name: "recoveryPeriodClosed",
+      msg: "The recovery period has closed.",
+    },
+    {
+      code: 6023,
+      name: "recoveryPeriodNotEnded",
+      msg: "The recovery period has not ended.",
+    },
+    {
+      code: 6024,
+      name: "invalidMaturity",
+      msg: "The pool maturity timestamp is invalid.",
+    },
+    {
+      code: 6025,
+      name: "settlementAlreadySubmitted",
+      msg: "A settlement is already pending.",
+    },
+    {
+      code: 6026,
+      name: "noPendingSettlement",
+      msg: "There is no pending settlement.",
+    },
+    {
+      code: 6027,
+      name: "insufficientVaultBalance",
+      msg: "The vault does not contain enough tokens for this transfer.",
     },
   ],
 } as const;

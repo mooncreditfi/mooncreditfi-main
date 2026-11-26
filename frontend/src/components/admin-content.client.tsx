@@ -398,10 +398,20 @@ export function AdminContentClient() {
                     <td className="p-3">{(account.entrepreneurProfitBps / 100).toFixed(2)}%</td>
                     <td className="p-3">
                       <div className="flex flex-wrap gap-2">
+                        {account.termSeconds === null && (
+                          <p className="w-full text-xs text-muted-foreground" role="note">
+                            Legacy proposal lacks a business term; submit a replacement before
+                            review.
+                          </p>
+                        )}
                         <Button
                           type="button"
                           variant="gold"
-                          disabled={busyAction !== null || !proposalInstructionsReady}
+                          disabled={
+                            busyAction !== null ||
+                            !proposalInstructionsReady ||
+                            account.termSeconds === null
+                          }
                           onClick={() =>
                             void runTransaction(
                               `approve:${key}`,
@@ -430,7 +440,11 @@ export function AdminContentClient() {
                         <Button
                           type="button"
                           variant="quiet"
-                          disabled={busyAction !== null || !proposalInstructionsReady}
+                          disabled={
+                            busyAction !== null ||
+                            !proposalInstructionsReady ||
+                            account.termSeconds === null
+                          }
                           onClick={() =>
                             void runTransaction(
                               `reject:${key}`,
