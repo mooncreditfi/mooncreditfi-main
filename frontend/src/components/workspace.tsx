@@ -179,7 +179,7 @@ export function Workspace({ children }: { children: ReactNode }) {
             <span className="network-badge">
               <span />
               <SiSolana className="network-badge-icon" aria-hidden="true" />
-              Solana Devnet
+              <span className="network-badge-label">Solana Devnet</span>
             </span>
           </div>
           <div className="workspace-header-actions">
