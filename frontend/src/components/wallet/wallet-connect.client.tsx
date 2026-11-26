@@ -46,6 +46,10 @@ const walletLinks: Record<string, string> = {
   Solflare: "https://solflare.com/download",
 };
 
+function shortAddress(address: string): string {
+  return `${address.slice(0, 5)}…${address.slice(-5)}`;
+}
+
 function errorText(error: unknown) {
   const message = error instanceof Error ? error.message : "";
   if (/user rejected|declined|cancelled/i.test(message)) {
