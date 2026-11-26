@@ -11,14 +11,13 @@ import {
   Handshake,
   Fingerprint,
   Globe2,
-  Check,
-  Building2,
   LockKeyhole,
   FileCheck2,
   CircleAlert,
   Network,
 } from "lucide-react";
 import { SiSolana } from "react-icons/si";
+import aboutVideo from "@/assets/gif.mp4";
 import { Button } from "@/components/ui/button";
 import { WalletConnectButton } from "@/components/wallet/wallet-connect";
 import {
@@ -169,9 +168,9 @@ function Index() {
           <div className="container-wide hero-grid">
             <div className="hero-copy">
               <h1>
-                Trust Before
+                Decentralized
                 <br />
-                <span className="gold-text">Capital.</span>
+                <span className="gold-text">Business Financing on Solana</span>
               </h1>
               <p className="hero-description">
                 Connecting African businesses with ethical investors through transparent profit
@@ -269,52 +268,20 @@ function Index() {
                 <ArrowRight size={15} />
               </a>
             </div>
-            <div className="trust-visual reveal">
-              <div className="profile-topline">
-                <span>REPUTATION & FUNDING</span>
-                <span>ILLUSTRATIVE</span>
-              </div>
-              <div className="profile-heading">
-                <div className="icon-tile">
-                  <Building2 />
-                </div>
-                <div>
-                  <h3>Business profile</h3>
-                  <p>Context. Evidence. Accountability.</p>
-                </div>
-              </div>
-              <div className="profile-row">
-                <span>Business identity</span>
-                <span>
-                  <Check />
-                  Review
-                </span>
-              </div>
-              <div className="profile-row">
-                <span>Documents</span>
-                <span>
-                  <FileCheck2 />
-                  Evidence
-                </span>
-              </div>
-              <div className="profile-row">
-                <span>Reputation</span>
-                <span>
-                  <ShieldCheck />
-                  Signals
-                </span>
-              </div>
-              <div className="profile-row">
-                <span>Financing</span>
-                <span>
-                  <Handshake />
-                  Mudarabah
-                </span>
-              </div>
-              <div className="profile-bottom">
-                <Fingerprint size={17} />
-                Trust is earned.
-              </div>
+            <div className="about-video-wrap reveal">
+              <video
+                className="about-video"
+                autoPlay
+                controls
+                loop
+                muted
+                playsInline
+                preload="metadata"
+                aria-label="MoonCreditFi reputation and funding overview"
+              >
+                <source src={aboutVideo} type="video/mp4" />
+                Your browser does not support video playback.
+              </video>
             </div>
           </div>
         </section>

@@ -3,7 +3,15 @@ import { useNavigate } from "@tanstack/react-router";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletReadyState } from "@solana/wallet-adapter-base";
-import { Check, Copy, ExternalLink, Loader2, LogOut, Wallet as WalletIcon } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  ExternalLink,
+  Loader2,
+  LogOut,
+  Wallet as WalletIcon,
+} from "lucide-react";
 import { SiSolana } from "react-icons/si";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,22 +26,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type WalletConnectProps = {
   onAuthenticated?: () => void;
   requireAuthentication?: boolean;
   showBalance?: boolean;
-  compact?: boolean;
 };
 
 const walletLinks: Record<string, string> = {
   Phantom: "https://phantom.app/download",
   Solflare: "https://solflare.com/download",
 };
-
-function shortAddress(address: string) {
-  return `${address.slice(0, 4)}…${address.slice(-4)}`;
-}
 
 function errorText(error: unknown) {
   const message = error instanceof Error ? error.message : "";
@@ -57,7 +68,6 @@ export function WalletConnectButtonClient({
   onAuthenticated,
   requireAuthentication = true,
   showBalance = false,
-  compact = false,
 }: WalletConnectProps) {
   const navigate = useNavigate();
   const { connection } = useConnection();
@@ -227,62 +237,74 @@ export function WalletConnectButtonClient({
   return (
     <>
       {connected && address ? (
-        <div className={`wallet-connected${compact ? " is-compact" : ""}`}>
-          {!compact && (
-            <span className="network-badge">
-              <span />
-              <SiSolana className="network-badge-icon" aria-hidden="true" />
-              Solana {SOLANA_NETWORK}
-            </span>
-          )}
-          <code>{shortAddress(address)}</code>
-          {showBalance && (
-            <span
-              className="wallet-balance"
-              role="status"
-              aria-label="Connected wallet SOL balance"
-              title={balanceError ?? `SOL balance on Solana ${SOLANA_NETWORK}`}
-            >
-              {balanceLamports === null
-                ? balanceError
-                  ? "Balance unavailable"
-                  : "Loading balance…"
-                : `${new Intl.NumberFormat(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 4,
-                  }).format(balanceLamports / LAMPORTS_PER_SOL)} SOL`}
-            </span>
-          )}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className={compact ? "wallet-copy-button" : undefined}
-            aria-label="Copy full wallet address"
-            onClick={() => void copyAddress()}
-          >
-            {copied ? <Check /> : <Copy />}
-          </Button>
-          {requireAuthentication && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button
               type="button"
-              variant="gold"
-              disabled={busy}
-              onClick={() => void authenticate()}
+              variant="wallet"
+              className="wallet-dropdown-trigger"
+              aria-label="Show connected wallet details"
             >
-              {busy ? <Loader2 className="animate-spin" /> : <WalletIcon />}
-              {busy ? "Authenticating…" : "Sign in"}
+              <WalletIcon />
+              Wallet
+              <ChevronDown aria-hidden="true" />
             </Button>
-          )}
-          <Button
-            type="button"
-            variant="quiet"
-            onClick={() => void disconnect()}
-            aria-label="Disconnect wallet"
-          >
-            <LogOut />
-          </Button>
-        </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" sideOffset={8} className="wallet-dropdown-content">
+            <DropdownMenuLabel className="wallet-dropdown-heading">
+              Connected wallet
+            </DropdownMenuLabel>
+            <DropdownMenuLabel className="wallet-dropdown-network">
+              <SiSolana aria-hidden="true" />
+              <span>Solana {SOLANA_NETWORK}</span>
+              <strong>{wallet?.adapter.name ?? "Wallet"}</strong>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="wallet-dropdown-detail">
+              <span>Wallet address</span>
+              <code>{address}</code>
+            </DropdownMenuLabel>
+            {showBalance && (
+              <DropdownMenuLabel className="wallet-dropdown-detail">
+                <span>SOL balance</span>
+                <strong
+                  role="status"
+                  title={balanceError ?? `SOL balance on Solana ${SOLANA_NETWORK}`}
+                >
+                  {balanceLamports === null
+                    ? balanceError
+                      ? "Balance unavailable"
+                      : "Loading balance…"
+                    : `${new Intl.NumberFormat(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 4,
+                      }).format(balanceLamports / LAMPORTS_PER_SOL)} SOL`}
+                </strong>
+                {balanceError && <small className="wallet-dropdown-error">{balanceError}</small>}
+              </DropdownMenuLabel>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={(event) => {
+                event.preventDefault();
+                void copyAddress();
+              }}
+            >
+              {copied ? <Check /> : <Copy />}
+              {copied ? "Address copied" : "Copy address"}
+            </DropdownMenuItem>
+            {requireAuthentication && (
+              <DropdownMenuItem disabled={busy} onSelect={() => void authenticate()}>
+                {busy ? <Loader2 className="animate-spin" /> : <WalletIcon />}
+                {busy ? "Authenticating…" : "Sign in"}
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onSelect={() => void disconnect()}>
+              <LogOut />
+              Disconnect wallet
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ) : (
         <Button type="button" variant="gold" onClick={() => setOpen(true)} disabled={connecting}>
           {connecting ? <Loader2 className="animate-spin" /> : <WalletIcon />}

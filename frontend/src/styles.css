@@ -280,8 +280,9 @@
   height: 13px;
 }
 .hero h1 {
-  font-size: 70px;
-  line-height: 1.11;
+  font-size: clamp(34px, 4.3vw, 58px);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
   font-weight: 800;
   margin-bottom: 23px;
 }
@@ -465,25 +466,13 @@
   font-weight: 600;
   margin-top: 20px;
 }
-.trust-visual {
-  position: relative;
-  border-left: 1px solid var(--border);
-  padding-left: 40px;
-}
-.profile-topline {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 10px;
-  color: var(--muted-foreground);
-  margin-bottom: 24px;
-}
-.profile-heading {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--border);
+.about-video-wrap {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: var(--shadow-glow);
 }
 .icon-tile {
   background: var(--surface-highlight);
@@ -500,49 +489,11 @@
   width: 21px;
   height: 21px;
 }
-.profile-heading h3 {
-  font-size: 16px;
-  font-weight: 650;
-  margin-bottom: 5px;
-}
-.profile-heading p {
-  color: var(--muted-foreground);
-  font-size: 11px;
-}
-.profile-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  padding-top: 20px;
-  color: var(--muted-foreground);
-}
-.profile-row span:last-child {
-  color: var(--violet-soft);
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-.profile-row svg {
-  width: 13px;
-  height: 13px;
-}
-.profile-bottom {
-  margin-top: 25px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  color: var(--gold);
-  font-size: 11px;
-  padding: 15px;
-  background: color-mix(in oklch, var(--gold) 5%, transparent);
-  border: 1px solid color-mix(in oklch, var(--gold) 18%, transparent);
-  border-radius: 6px;
-}
-.profile-disclaimer {
-  color: var(--muted-foreground);
-  font-size: 9px;
-  margin-top: 12px;
-  line-height: 1.6;
+.about-video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
 }
 .features-section {
   border-block: 1px solid var(--border);
@@ -992,9 +943,6 @@
   .mobile-toggle {
     display: inline-flex;
   }
-  .hero h1 {
-    font-size: 56px;
-  }
   .hero-grid {
     min-height: 610px;
   }
@@ -1147,11 +1095,6 @@
     gap: 20px;
     min-height: 0;
   }
-  .hero h1 {
-    font-size: 49px;
-    line-height: 1.12;
-    margin-bottom: 20px;
-  }
   .hero-badge {
     font-size: 9px;
     margin-bottom: 23px;
@@ -1249,9 +1192,6 @@
   .faq-grid {
     grid-template-columns: 1fr;
     gap: 35px;
-  }
-  .trust-visual {
-    padding-left: 20px;
   }
   .section-top {
     display: block;
@@ -2225,24 +2165,64 @@
   font-size: 0.75rem;
   line-height: 1.6;
 }
-.wallet-connected {
+.wallet-dropdown-trigger {
+  gap: 8px;
+}
+.wallet-dropdown-trigger svg {
+  width: 16px;
+  height: 16px;
+}
+.wallet-dropdown-content {
+  width: min(340px, calc(100vw - 24px));
+  padding: 10px;
+}
+.wallet-dropdown-heading {
+  padding: 6px 8px;
+  color: var(--foreground);
+  font-size: 0.9rem;
+}
+.wallet-dropdown-network {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.wallet-connected.is-compact {
-  flex-wrap: nowrap;
-  gap: 4px;
-}
-.wallet-connected code {
-  color: var(--foreground);
-  font-size: 0.78rem;
-}
-.wallet-balance {
+  gap: 8px;
+  padding: 4px 8px 10px;
   color: var(--muted-foreground);
   font-size: 0.75rem;
-  white-space: nowrap;
+}
+.wallet-dropdown-network svg {
+  width: 15px;
+  height: 15px;
+  color: #9945ff;
+  flex-shrink: 0;
+}
+.wallet-dropdown-network strong {
+  margin-left: auto;
+  color: var(--foreground);
+}
+.wallet-dropdown-detail {
+  display: grid;
+  gap: 5px;
+  padding: 9px 8px;
+}
+.wallet-dropdown-detail > span {
+  color: var(--muted-foreground);
+  font-size: 0.72rem;
+}
+.wallet-dropdown-detail code {
+  color: var(--foreground);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.wallet-dropdown-detail > strong {
+  color: var(--foreground);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+.wallet-dropdown-error {
+  color: var(--destructive);
+  font-size: 0.7rem;
+  overflow-wrap: anywhere;
 }
 .workspace-header-actions {
   display: flex;
@@ -2256,23 +2236,6 @@
   font-size: 0.8rem;
 }
 @media (max-width: 767px) {
-  .wallet-connected {
-    justify-content: center;
-  }
-  .wallet-connected .network-badge {
-    display: none;
-  }
-  .wallet-connected.is-compact {
-    justify-content: flex-end;
-    gap: 2px;
-  }
-  .wallet-connected.is-compact code,
-  .wallet-connected.is-compact .wallet-copy-button {
-    display: none;
-  }
-  .wallet-connected.is-compact .wallet-balance {
-    font-size: 0.68rem;
-  }
   .workspace-header-actions {
     gap: 4px;
   }

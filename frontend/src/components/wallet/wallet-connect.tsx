@@ -9,13 +9,11 @@ const loadWalletConnect = createClientOnlyFn(() => import("./wallet-connect.clie
 type WalletConnectButtonProps = {
   requireAuthentication?: boolean;
   showBalance?: boolean;
-  compact?: boolean;
 };
 
 export function WalletConnectButton({
   requireAuthentication = true,
   showBalance = false,
-  compact = false,
 }: WalletConnectButtonProps) {
   const ready = useWalletRuntimeReady();
   const [ClientButton, setClientButton] = useState<ComponentType<WalletConnectButtonProps> | null>(
@@ -40,13 +38,7 @@ export function WalletConnectButton({
   }, [ready]);
 
   if (ClientButton)
-    return (
-      <ClientButton
-        requireAuthentication={requireAuthentication}
-        showBalance={showBalance}
-        compact={compact}
-      />
-    );
+    return <ClientButton requireAuthentication={requireAuthentication} showBalance={showBalance} />;
   return (
     <Button type="button" variant="gold" disabled>
       {loadFailed ? <Wallet /> : <Loader2 className="animate-spin" />}
