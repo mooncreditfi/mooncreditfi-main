@@ -2,6 +2,7 @@ import { useEffect, useState, type ComponentType } from "react";
 import { createClientOnlyFn } from "@tanstack/react-start";
 import { Loader2, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/components/auth-provider";
 import { useWalletRuntimeReady } from "./wallet-runtime-context";
 
 const loadWalletConnect = createClientOnlyFn(() => import("./wallet-connect.client"));
@@ -16,6 +17,7 @@ export function WalletConnectButton({
   showBalance = false,
 }: WalletConnectButtonProps) {
   const ready = useWalletRuntimeReady();
+  const { user, loading } = useAuth();
   const [ClientButton, setClientButton] = useState<ComponentType<WalletConnectButtonProps> | null>(
     null,
   );
@@ -37,12 +39,20 @@ export function WalletConnectButton({
     };
   }, [ready]);
 
+  if (user) {
+    return (
+      <span className="network-badge" aria-label="Wallet authenticated">
+        <span />
+        Wallet authenticated
+      </span>
+    );
+  }
   if (ClientButton)
     return <ClientButton requireAuthentication={requireAuthentication} showBalance={showBalance} />;
   return (
     <Button type="button" variant="gold" disabled>
       {loadFailed ? <Wallet /> : <Loader2 className="animate-spin" />}
-      {loadFailed ? "Wallet unavailable" : "Loading wallet…"}
+      {loadFailed ? "Wallet unavailable" : loading ? "Restoring session…" : "Loading wallet…"}
     </Button>
   );
 }
