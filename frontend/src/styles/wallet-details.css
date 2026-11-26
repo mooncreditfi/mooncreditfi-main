@@ -81,8 +81,10 @@
 }
 .wallet-address-row code {
   min-width: 0;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-width: thin;
   color: var(--foreground);
   font-size: clamp(0.65rem, 2.8vw, 0.76rem);
   line-height: 1.5;
@@ -165,10 +167,10 @@
     gap: 8px;
   }
   .wallet-mobile-trigger {
-    width: 42px;
-    min-width: 42px;
+    width: auto;
+    min-width: 0;
     height: 42px;
-    padding: 0;
+    padding: 0 11px;
     justify-content: center;
     position: relative;
   }
@@ -177,7 +179,24 @@
     height: 19px;
   }
   .wallet-trigger-label {
-    display: none;
+    display: inline;
+    max-width: 116px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+  }
+  .workspace-header-actions .workspace-sign-out {
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    padding: 0;
+    gap: 0;
+    font-size: 0;
+  }
+  .workspace-header-actions .workspace-sign-out svg {
+    width: 18px;
+    height: 18px;
   }
   .wallet-auth-dot {
     position: absolute;
@@ -232,7 +251,7 @@
   }
 }
 
-@media (max-width: 340px) {
+@media (max-width: 359px) {
   .wallet-details-dialog {
     padding-inline: 12px;
   }

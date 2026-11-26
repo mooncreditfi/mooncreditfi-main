@@ -1739,9 +1739,16 @@
     display: flex;
     position: fixed;
     z-index: 60;
-    width: 265px;
+    width: min(86vw, 300px);
     left: 0;
     top: 0;
+    max-height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 0 18px 18px 0;
+    box-shadow: var(--shadow-glow);
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
   }
   .workspace-menu {
     display: inline-flex;
@@ -1757,8 +1764,13 @@
     border-radius: 0;
   }
   .workspace-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
     min-height: 72px;
     padding: 14px 20px;
+    background: color-mix(in oklch, var(--background) 92%, transparent);
+    backdrop-filter: blur(14px);
   }
   .workspace-network-note {
     padding: 12px 20px;

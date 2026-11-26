@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { WalletConnectButtonClient } from "@/components/wallet/wallet-connect.client";
 import { describe, expect, it, vi } from "vitest";
 
@@ -32,9 +32,11 @@ vi.mock("@solana/wallet-adapter-react", async () => {
 });
 
 describe("WalletConnectButtonClient", () => {
-  it("renders a shortened connected wallet address", () => {
+  it("opens wallet details with the full address after a connected wallet is tapped", () => {
     render(<WalletConnectButtonClient />);
 
-    expect(screen.getByText("Ge2UZ…wVCAb")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Open wallet details" }));
+
+    expect(screen.getByText(walletMocks.address)).toBeInTheDocument();
   });
 });

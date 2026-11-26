@@ -185,7 +185,12 @@ export function Workspace({ children }: { children: ReactNode }) {
           <div className="workspace-header-actions">
             <WalletConnectButton requireAuthentication={!signedIn} showBalance />
             {signedIn && (
-              <Button variant="wallet" onClick={() => void signOut()}>
+              <Button
+                variant="wallet"
+                className="workspace-sign-out"
+                aria-label="Sign out"
+                onClick={() => void signOut()}
+              >
                 <LogOut />
                 Sign out
               </Button>
