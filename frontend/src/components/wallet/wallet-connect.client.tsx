@@ -182,7 +182,13 @@ export function WalletConnectButtonClient({ onAuthenticated }: WalletConnectProp
           >
             {copied ? <Check /> : <Copy />}
           </Button>
-          <Button type="button" variant="gold" disabled={busy} onClick={() => void authenticate()}>
+          <Button
+            type="button"
+            variant="gold"
+            aria-label="Sign in with connected wallet"
+            disabled={busy}
+            onClick={() => void authenticate()}
+          >
             {busy ? <Loader2 className="animate-spin" /> : <WalletIcon />}
             {busy ? "Authenticating…" : "Sign in"}
           </Button>

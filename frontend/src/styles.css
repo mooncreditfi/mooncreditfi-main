@@ -1026,7 +1026,12 @@
   .container-wide {
     width: calc(100% - 32px);
   }
-  .header-actions > button:first-child {
+  .header-actions {
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+  .header-actions > button:first-child,
+  .header-actions .wallet-connected > button {
     width: 38px;
     min-width: 38px;
     height: 38px;
@@ -1034,9 +1039,22 @@
     font-size: 0;
     gap: 0;
   }
-  .header-actions > button:first-child svg {
+  .header-actions > button:first-child svg,
+  .header-actions .wallet-connected > button svg {
     width: 18px;
     height: 18px;
+  }
+  .header-actions .wallet-connected {
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 4px;
+  }
+  .header-actions .wallet-connected code,
+  .header-actions .wallet-connected > button[aria-label="Copy full wallet address"] {
+    display: none;
+  }
+  .header-actions .wallet-connected .network-badge {
+    display: none;
   }
   .hero-buttons,
   .cta-actions {
