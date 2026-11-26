@@ -1,3 +1,4 @@
+import "./wallet-details-styles";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
@@ -126,7 +127,6 @@ export function WalletConnectButtonClient({
     if (!connectingName || wallet?.adapter.name !== connectingName) return;
     void connect().then(() => {
       setConnectingName(null);
-      // Keep the wallet panel open after connection so the user can inspect balances/auth state.
     }).catch((error) => {
       setConnectingName(null);
       toast.error(errorText(error));
