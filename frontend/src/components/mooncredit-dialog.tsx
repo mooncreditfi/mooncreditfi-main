@@ -17,11 +17,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { steps } from "./mooncredit-content";
-export type Panel =
-  "wallet" | "opportunities" | "entrepreneur" | "demo" | "contact" | "privacy" | "terms";
+export type Panel = "wallet" | "entrepreneur" | "demo" | "contact" | "privacy" | "terms";
 const titles: Record<Panel, string> = {
   wallet: "Connect your wallet",
-  opportunities: "Explore opportunities",
   entrepreneur: "Bring your business forward",
   demo: "From trust to opportunity",
   contact: "Contact MoonCreditFi",
@@ -30,7 +28,6 @@ const titles: Record<Panel, string> = {
 };
 const descriptions: Record<Panel, string> = {
   wallet: "Wallet access is not configured yet.",
-  opportunities: "Transparent terms. Real businesses. Informed decisions.",
   entrepreneur: "An ethical path to business financing.",
   demo: "An illustrative walkthrough of the intended financing process.",
   contact: "Let’s start a conversation.",
@@ -70,20 +67,6 @@ export function MoonCreditDialog({ panel, onClose }: { panel: Panel | null; onCl
               </p>
             </div>
           )}
-          {panel === "opportunities" && (
-            <div className="dialog-notice">
-              <BriefcaseBusiness size={27} />
-              <h3 className="text-foreground font-semibold mb-2">
-                No investment pools available yet
-              </h3>
-              <p>
-                There are no live opportunities to browse on this website. Business profiles,
-                disclosed pool terms and risk information will be available before participation
-                opens.
-              </p>
-              <p className="mt-3">Investment returns are not guaranteed. Capital is at risk.</p>
-            </div>
-          )}
           {panel === "entrepreneur" && (
             <div className="dialog-notice">
               <BriefcaseBusiness size={27} />
@@ -106,6 +89,7 @@ export function MoonCreditDialog({ panel, onClose }: { panel: Panel | null; onCl
                 <div className="icon-tile">
                   <current.icon />
                 </div>
+                <p className="demo-step-actor">{current.actor}</p>
                 <h3>
                   {String(step + 1).padStart(2, "0")}. {current.title}
                 </h3>

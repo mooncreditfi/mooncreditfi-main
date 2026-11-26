@@ -5,7 +5,8 @@ import { Workspace, WorkspaceTitle } from "@/components/workspace";
 import { useWalletRuntimeReady } from "@/components/wallet/wallet-runtime-context";
 
 const loadClientAdmin = createClientOnlyFn(async () => {
-  await import("@/lib/solana-buffer");
+  const { installSolanaBuffer } = await import("@/lib/solana-buffer");
+  installSolanaBuffer();
   return import("@/components/admin-content.client");
 });
 

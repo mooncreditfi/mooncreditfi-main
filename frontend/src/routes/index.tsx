@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
+  ArrowDown,
   ArrowRight,
   ArrowUpRight,
   Menu,
@@ -11,14 +12,13 @@ import {
   Handshake,
   Fingerprint,
   Globe2,
-  Check,
-  Building2,
   LockKeyhole,
   FileCheck2,
   CircleAlert,
   Network,
 } from "lucide-react";
 import { SiSolana } from "react-icons/si";
+import aboutVideo from "@/assets/gif.mp4";
 import { Button } from "@/components/ui/button";
 import { WalletConnectButton } from "@/components/wallet/wallet-connect";
 import {
@@ -140,7 +140,7 @@ function Index() {
             ))}
           </nav>
           <div className="header-actions shrink-0">
-            <WalletConnectButton />
+            <WalletConnectButton showBalance />
             <Button
               variant="ghost"
               size="icon"
@@ -169,22 +169,26 @@ function Index() {
           <div className="container-wide hero-grid">
             <div className="hero-copy">
               <h1>
-                Trust Before
+                Decentralized
                 <br />
-                <span className="gold-text">Capital.</span>
+                <span className="gold-text">Business Financing on Solana</span>
               </h1>
               <p className="hero-description">
                 Connecting African businesses with ethical investors through transparent profit
                 sharing.
               </p>
               <div className="hero-buttons">
-                <Button variant="gold" onClick={() => setPanel("opportunities")}>
-                  Explore Opportunities
-                  <ArrowRight />
+                <Button asChild variant="gold">
+                  <Link to="/opportunities">
+                    Explore Opportunities
+                    <ArrowRight />
+                  </Link>
                 </Button>
-                <Button variant="quiet" onClick={() => setPanel("demo")}>
-                  <Play className="text-gold" />
-                  How It Works
+                <Button asChild variant="quiet">
+                  <a href="#how-it-works">
+                    <ArrowDown className="text-gold" />
+                    How It Works
+                  </a>
                 </Button>
               </div>
               <div className="hero-credentials">
@@ -269,52 +273,20 @@ function Index() {
                 <ArrowRight size={15} />
               </a>
             </div>
-            <div className="trust-visual reveal">
-              <div className="profile-topline">
-                <span>REPUTATION & FUNDING</span>
-                <span>ILLUSTRATIVE</span>
-              </div>
-              <div className="profile-heading">
-                <div className="icon-tile">
-                  <Building2 />
-                </div>
-                <div>
-                  <h3>Business profile</h3>
-                  <p>Context. Evidence. Accountability.</p>
-                </div>
-              </div>
-              <div className="profile-row">
-                <span>Business identity</span>
-                <span>
-                  <Check />
-                  Review
-                </span>
-              </div>
-              <div className="profile-row">
-                <span>Documents</span>
-                <span>
-                  <FileCheck2 />
-                  Evidence
-                </span>
-              </div>
-              <div className="profile-row">
-                <span>Reputation</span>
-                <span>
-                  <ShieldCheck />
-                  Signals
-                </span>
-              </div>
-              <div className="profile-row">
-                <span>Financing</span>
-                <span>
-                  <Handshake />
-                  Mudarabah
-                </span>
-              </div>
-              <div className="profile-bottom">
-                <Fingerprint size={17} />
-                Trust is earned.
-              </div>
+            <div className="about-video-wrap reveal">
+              <video
+                className="about-video"
+                autoPlay
+                controls
+                loop
+                muted
+                playsInline
+                preload="metadata"
+                aria-label="MoonCreditFi reputation and funding overview"
+              >
+                <source src={aboutVideo} type="video/mp4" />
+                Your browser does not support video playback.
+              </video>
             </div>
           </div>
         </section>
@@ -352,16 +324,36 @@ function Index() {
               <h2 className="section-heading">
                 From Trust to <span className="gold-text">Capital.</span>
               </h2>
-              <p className="section-description">Apply. Review. Fund. Report.</p>
+              <p className="section-description">
+                A clear path from proposal review to informed funding and on-chain activity.
+              </p>
             </div>
             <div className="steps">
               {steps.map((step, i) => (
                 <article key={step.title} className="step reveal">
                   <span className="step-number">0{i + 1}</span>
                   <h3>{step.title}</h3>
+                  <span className="step-actor">{step.actor}</span>
                   <p>{step.description}</p>
                 </article>
               ))}
+            </div>
+            <div className="steps-footer reveal">
+              <p className="steps-note">
+                This flow reflects current Devnet capabilities. Returns are not guaranteed.
+              </p>
+              <div className="steps-actions">
+                <Button asChild variant="gold">
+                  <Link to="/opportunities">
+                    Explore Opportunities
+                    <ArrowRight />
+                  </Link>
+                </Button>
+                <Button variant="quiet" onClick={() => setPanel("demo")}>
+                  <Play className="text-gold" />
+                  Guided walkthrough
+                </Button>
+              </div>
             </div>
           </div>
         </section>
@@ -478,9 +470,11 @@ function Index() {
               <p>Explore the MoonCreditFi journey.</p>
             </div>
             <div className="cta-actions">
-              <Button variant="gold" onClick={() => setPanel("opportunities")}>
-                Explore Opportunities
-                <ArrowRight />
+              <Button asChild variant="gold">
+                <Link to="/opportunities">
+                  Explore Opportunities
+                  <ArrowRight />
+                </Link>
               </Button>
               <Button variant="quiet" onClick={() => setPanel("entrepreneur")}>
                 For Entrepreneurs
@@ -507,8 +501,8 @@ function Index() {
               <h3>Platform</h3>
               <a href="#features">Features</a>
               <a href="#how-it-works">How It Works</a>
-              <Button variant="nav" onClick={() => setPanel("opportunities")}>
-                Opportunities
+              <Button asChild variant="nav">
+                <Link to="/opportunities">Opportunities</Link>
               </Button>
             </div>
             <div className="footer-column">
@@ -532,7 +526,7 @@ function Index() {
           </div>
           <div className="footer-bottom">
             <span>
-              © 2026 MoonCreditFi. All rights reserved. · Returns are not guaranteed. Capital is at
+              © 2026 MoonCreditFi. All rights reserved. · Returns aren't guaranteed; capital is at
               risk.
             </span>
             <span>

@@ -1,6 +1,6 @@
-import { BN } from "@coral-xyz/anchor";
+import { BN, Program } from "@coral-xyz/anchor";
 import { useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
 import { RefreshCw, ShieldCheck } from "lucide-react";
@@ -18,7 +18,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Workspace, WorkspaceTitle } from "@/components/workspace";
-import { CONFIG_SEED, moonCreditProgramId, REJECTION_SEED } from "@/lib/mooncredit-program";
+import {
+  checkProposalInstructionCompatibility,
+  CONFIG_SEED,
+  moonCreditProgramId,
+  REJECTION_SEED,
+} from "@/lib/mooncredit-program";
 import {
   moonCreditQueryKeys,
   useAdminProposals,
@@ -72,8 +77,22 @@ export function AdminContentClient() {
   const program = useProgram();
   const queryClient = useQueryClient();
   const configQuery = useConfig();
+  const proposalInstructionCompatibility = useQuery({
+    queryKey: ["mooncreditfi", "admin", "proposal-instruction-compatibility"],
+    queryFn: async () => {
+      const deployedIdl = await Program.fetchIdl(moonCreditProgramId, program.provider);
+      if (!deployedIdl) throw new Error("The Devnet MoonCreditFi IDL could not be found.");
+      return checkProposalInstructionCompatibility(deployedIdl.instructions);
+    },
+    staleTime: 60_000,
+  });
+  const proposalInstructionsReady = proposalInstructionCompatibility.data?.ready === true;
   const isAuthority = Boolean(
-    publicKey && configQuery.data && publicKey.equals(configQuery.data.authority),
+    publicKey &&
+    anchorWallet &&
+    publicKey.equals(anchorWallet.publicKey) &&
+    configQuery.data &&
+    anchorWallet.publicKey.equals(configQuery.data.authority),
   );
   const proposalsQuery = useAdminProposals(isAuthority ? publicKey : null);
   const settlementsQuery = useAdminSettlements(isAuthority);
@@ -92,9 +111,32 @@ export function AdminContentClient() {
       return;
     }
 
+    const authority = anchorWallet.publicKey;
+    if (
+      !publicKey.equals(authority) ||
+      !program.provider.publicKey?.equals(authority) ||
+      !configQuery.data?.authority.equals(authority)
+    ) {
+      toast.error(
+        "The transaction signer does not match the current platform authority. Reconnect the authority wallet and try again.",
+      );
+      return;
+    }
+
+    if (
+      (actionKey.startsWith("approve:") || actionKey.startsWith("reject:")) &&
+      !proposalInstructionsReady
+    ) {
+      toast.error(
+        proposalInstructionCompatibility.data?.reason ??
+          "Could not verify the deployed proposal instructions. Refresh and try again.",
+      );
+      return;
+    }
+
     setBusyAction(actionKey);
     try {
-      const signature = await submit(publicKey);
+      const signature = await submit(authority);
       txToast(signature, successMessage);
       await queryClient.invalidateQueries({ queryKey: moonCreditQueryKeys.all });
     } catch (error) {
@@ -109,6 +151,7 @@ export function AdminContentClient() {
       await Promise.all([
         configQuery.refetch({ throwOnError: true }),
         proposalsQuery.refetch({ throwOnError: true }),
+        proposalInstructionCompatibility.refetch({ throwOnError: true }),
         settlementsQuery.refetch({ throwOnError: true }),
         poolsQuery.refetch({ throwOnError: true }),
       ]);
@@ -313,6 +356,22 @@ export function AdminContentClient() {
           <h2>Pending proposals</h2>
           <span>{pendingProposals.length} pending</span>
         </div>
+        {proposalInstructionCompatibility.isLoading && (
+          <p className="mb-3 text-sm text-muted-foreground">
+            Verifying the deployed proposal instructions…
+          </p>
+        )}
+        {proposalInstructionCompatibility.isError && (
+          <p className="mb-3 text-sm text-destructive" role="alert">
+            Could not verify the deployed proposal instructions:{" "}
+            {errorMessage(proposalInstructionCompatibility.error)}
+          </p>
+        )}
+        {proposalInstructionCompatibility.data?.ready === false && (
+          <p className="mb-3 text-sm text-destructive" role="alert">
+            {proposalInstructionCompatibility.data.reason}
+          </p>
+        )}
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead>
@@ -340,7 +399,7 @@ export function AdminContentClient() {
                         <Button
                           type="button"
                           variant="gold"
-                          disabled={busyAction !== null}
+                          disabled={busyAction !== null || !proposalInstructionsReady}
                           onClick={() =>
                             void runTransaction(
                               `approve:${key}`,
@@ -369,7 +428,7 @@ export function AdminContentClient() {
                         <Button
                           type="button"
                           variant="quiet"
-                          disabled={busyAction !== null}
+                          disabled={busyAction !== null || !proposalInstructionsReady}
                           onClick={() =>
                             void runTransaction(
                               `reject:${key}`,

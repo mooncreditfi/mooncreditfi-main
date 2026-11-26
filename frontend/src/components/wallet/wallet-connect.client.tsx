@@ -1,8 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletReadyState } from "@solana/wallet-adapter-base";
-import { Check, Copy, ExternalLink, Loader2, LogOut, Wallet as WalletIcon } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  ExternalLink,
+  Loader2,
+  LogOut,
+  Wallet as WalletIcon,
+} from "lucide-react";
 import { SiSolana } from "react-icons/si";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,19 +26,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type WalletConnectProps = {
   onAuthenticated?: () => void;
+  requireAuthentication?: boolean;
+  showBalance?: boolean;
 };
 
 const walletLinks: Record<string, string> = {
   Phantom: "https://phantom.app/download",
   Solflare: "https://solflare.com/download",
 };
-
-function shortAddress(address: string) {
-  return `${address.slice(0, 4)}…${address.slice(-4)}`;
-}
 
 function errorText(error: unknown) {
   const message = error instanceof Error ? error.message : "";
@@ -49,8 +64,13 @@ function errorText(error: unknown) {
   return message || "Wallet request failed. Please retry.";
 }
 
-export function WalletConnectButtonClient({ onAuthenticated }: WalletConnectProps) {
+export function WalletConnectButtonClient({
+  onAuthenticated,
+  requireAuthentication = true,
+  showBalance = false,
+}: WalletConnectProps) {
   const navigate = useNavigate();
+  const { connection } = useConnection();
   const walletState = useWallet();
   const { wallets, wallet, publicKey, connected, connecting, select, connect, disconnect } =
     walletState;
@@ -58,8 +78,59 @@ export function WalletConnectButtonClient({ onAuthenticated }: WalletConnectProp
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [connectingName, setConnectingName] = useState<string | null>(null);
+  const [balanceLamports, setBalanceLamports] = useState<number | null>(null);
+  const [balanceError, setBalanceError] = useState<string | null>(null);
   const address = publicKey?.toBase58();
   const addressRef = useRef(address);
+
+  useEffect(() => {
+    if (!showBalance || !connected || !publicKey) {
+      setBalanceLamports(null);
+      setBalanceError(null);
+      return;
+    }
+
+    setBalanceLamports(null);
+    setBalanceError(null);
+    let active = true;
+    const refreshBalance = async () => {
+      try {
+        const lamports = await connection.getBalance(publicKey, "confirmed");
+        if (active) {
+          setBalanceLamports(lamports);
+          setBalanceError(null);
+        }
+      } catch (error) {
+        if (active) {
+          const message = error instanceof Error ? error.message : "RPC request failed.";
+          setBalanceError(message);
+          console.error("Could not load the connected wallet SOL balance.", error);
+        }
+      }
+    };
+
+    void refreshBalance();
+    const subscriptionId = connection.onAccountChange(
+      publicKey,
+      (accountInfo) => {
+        if (!active) return;
+        setBalanceLamports(accountInfo.lamports);
+        setBalanceError(null);
+      },
+      "confirmed",
+    );
+    window.addEventListener("focus", refreshBalance);
+
+    return () => {
+      active = false;
+      window.removeEventListener("focus", refreshBalance);
+      void connection
+        .removeAccountChangeListener(subscriptionId)
+        .catch((error) =>
+          console.error("Could not unsubscribe from wallet balance updates.", error),
+        );
+    };
+  }, [connected, connection, publicKey, showBalance]);
 
   useEffect(() => {
     addressRef.current = address;

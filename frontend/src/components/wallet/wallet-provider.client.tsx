@@ -20,7 +20,7 @@ export function WalletProviderClient({ children }: { children: ReactNode }) {
 
   return (
     <ConnectionProvider endpoint="https://api.devnet.solana.com">
-      <AdapterWalletProvider wallets={wallets} autoConnect={false}>
+      <AdapterWalletProvider wallets={wallets} autoConnect>
         <WalletSessionMonitor />
         {children}
       </AdapterWalletProvider>
