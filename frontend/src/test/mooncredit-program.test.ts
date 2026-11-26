@@ -7,7 +7,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import { describe, expect, it } from "vitest";
-import { moonCreditIdl } from "@/lib/mooncredit-program";
+import { checkProposalInstructionCompatibility, moonCreditIdl } from "@/lib/mooncredit-program";
 
 describe("MoonCreditFi Anchor client", () => {
   it("constructs account decoders and pool instructions from the bundled IDL", () => {
@@ -86,5 +86,68 @@ describe("MoonCreditFi Anchor client", () => {
     expect(Buffer.from(instruction.data.subarray(8))).toEqual(target.toBuffer());
     expect(instruction.keys[0].isWritable).toBe(true);
     expect(instruction.keys[1].isSigner).toBe(true);
+  });
+
+  it("detects a deployed proposal IDL with outdated decision instructions", () => {
+    expect(checkProposalInstructionCompatibility(moonCreditIdl.instructions)).toEqual({
+      ready: true,
+    });
+
+    const compatibility = checkProposalInstructionCompatibility([
+      {
+        name: "approveProposal",
+        accounts: [{ name: "config" }, { name: "proposal" }, { name: "authority" }],
+      },
+    ]);
+
+    expect(compatibility.ready).toBe(false);
+    if (!compatibility.ready) {
+      expect(compatibility.reason).toContain("approveProposal has an outdated account layout");
+      expect(compatibility.reason).toContain("rejectProposal is missing");
+    }
+  });
+
+  it("builds approval and rejection with the authority in the signer slot", async () => {
+    const program = new Program(moonCreditIdl, {
+      connection: new Connection("https://api.devnet.solana.com"),
+    });
+    const accounts = {
+      config: Keypair.generate().publicKey,
+      proposal: Keypair.generate().publicKey,
+      rejection: Keypair.generate().publicKey,
+      authority: Keypair.generate().publicKey,
+      systemProgram: SystemProgram.programId,
+    };
+
+    async function buildInstruction(name: string) {
+      const method = Reflect.get(program.methods, name);
+      const builder = Reflect.apply(method, program.methods, []);
+      const withAccounts = Reflect.apply(Reflect.get(builder, "accounts"), builder, [accounts]);
+      return Reflect.apply(
+        Reflect.get(withAccounts, "instruction"),
+        withAccounts,
+        [],
+      ) as Promise<TransactionInstruction>;
+    }
+
+    const approval = await buildInstruction("approveProposal");
+    expect(approval.keys.map((key) => key.pubkey)).toEqual([
+      accounts.config,
+      accounts.proposal,
+      accounts.rejection,
+      accounts.authority,
+    ]);
+    expect(approval.keys[3].isSigner).toBe(true);
+
+    const rejection = await buildInstruction("rejectProposal");
+    expect(rejection.keys.map((key) => key.pubkey)).toEqual([
+      accounts.config,
+      accounts.proposal,
+      accounts.rejection,
+      accounts.authority,
+      accounts.systemProgram,
+    ]);
+    expect(rejection.keys[3].isSigner).toBe(true);
+    expect(rejection.keys[3].isWritable).toBe(true);
   });
 });
