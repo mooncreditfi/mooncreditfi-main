@@ -73,7 +73,11 @@ export function AdminContentClient() {
   const queryClient = useQueryClient();
   const configQuery = useConfig();
   const isAuthority = Boolean(
-    publicKey && configQuery.data && publicKey.equals(configQuery.data.authority),
+    publicKey &&
+    anchorWallet &&
+    publicKey.equals(anchorWallet.publicKey) &&
+    configQuery.data &&
+    anchorWallet.publicKey.equals(configQuery.data.authority),
   );
   const proposalsQuery = useAdminProposals(isAuthority ? publicKey : null);
   const settlementsQuery = useAdminSettlements(isAuthority);
@@ -92,9 +96,21 @@ export function AdminContentClient() {
       return;
     }
 
+    const authority = anchorWallet.publicKey;
+    if (
+      !publicKey.equals(authority) ||
+      !program.provider.publicKey?.equals(authority) ||
+      !configQuery.data?.authority.equals(authority)
+    ) {
+      toast.error(
+        "The transaction signer does not match the current platform authority. Reconnect the authority wallet and try again.",
+      );
+      return;
+    }
+
     setBusyAction(actionKey);
     try {
-      const signature = await submit(publicKey);
+      const signature = await submit(authority);
       txToast(signature, successMessage);
       await queryClient.invalidateQueries({ queryKey: moonCreditQueryKeys.all });
     } catch (error) {

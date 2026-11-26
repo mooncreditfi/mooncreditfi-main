@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
+  ArrowDown,
   ArrowRight,
   ArrowUpRight,
   Menu,
@@ -177,13 +178,17 @@ function Index() {
                 sharing.
               </p>
               <div className="hero-buttons">
-                <Button variant="gold" onClick={() => setPanel("opportunities")}>
-                  Explore Opportunities
-                  <ArrowRight />
+                <Button asChild variant="gold">
+                  <Link to="/opportunities">
+                    Explore Opportunities
+                    <ArrowRight />
+                  </Link>
                 </Button>
-                <Button variant="quiet" onClick={() => setPanel("demo")}>
-                  <Play className="text-gold" />
-                  How It Works
+                <Button asChild variant="quiet">
+                  <a href="#how-it-works">
+                    <ArrowDown className="text-gold" />
+                    How It Works
+                  </a>
                 </Button>
               </div>
               <div className="hero-credentials">
@@ -319,16 +324,36 @@ function Index() {
               <h2 className="section-heading">
                 From Trust to <span className="gold-text">Capital.</span>
               </h2>
-              <p className="section-description">Apply. Review. Fund. Report.</p>
+              <p className="section-description">
+                A clear path from proposal review to informed funding and on-chain activity.
+              </p>
             </div>
             <div className="steps">
               {steps.map((step, i) => (
                 <article key={step.title} className="step reveal">
                   <span className="step-number">0{i + 1}</span>
                   <h3>{step.title}</h3>
+                  <span className="step-actor">{step.actor}</span>
                   <p>{step.description}</p>
                 </article>
               ))}
+            </div>
+            <div className="steps-footer reveal">
+              <p className="steps-note">
+                This flow reflects current Devnet capabilities. Returns are not guaranteed.
+              </p>
+              <div className="steps-actions">
+                <Button asChild variant="gold">
+                  <Link to="/opportunities">
+                    Explore Opportunities
+                    <ArrowRight />
+                  </Link>
+                </Button>
+                <Button variant="quiet" onClick={() => setPanel("demo")}>
+                  <Play className="text-gold" />
+                  Guided walkthrough
+                </Button>
+              </div>
             </div>
           </div>
         </section>
@@ -445,9 +470,11 @@ function Index() {
               <p>Explore the MoonCreditFi journey.</p>
             </div>
             <div className="cta-actions">
-              <Button variant="gold" onClick={() => setPanel("opportunities")}>
-                Explore Opportunities
-                <ArrowRight />
+              <Button asChild variant="gold">
+                <Link to="/opportunities">
+                  Explore Opportunities
+                  <ArrowRight />
+                </Link>
               </Button>
               <Button variant="quiet" onClick={() => setPanel("entrepreneur")}>
                 For Entrepreneurs
@@ -474,8 +501,8 @@ function Index() {
               <h3>Platform</h3>
               <a href="#features">Features</a>
               <a href="#how-it-works">How It Works</a>
-              <Button variant="nav" onClick={() => setPanel("opportunities")}>
-                Opportunities
+              <Button asChild variant="nav">
+                <Link to="/opportunities">Opportunities</Link>
               </Button>
             </div>
             <div className="footer-column">

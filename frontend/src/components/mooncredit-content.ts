@@ -54,17 +54,29 @@ export const features = [
   },
 ];
 export const steps = [
-  { icon: Users, title: "Apply", description: "Submit a business profile and funding proposal." },
+  {
+    icon: Users,
+    title: "Apply",
+    actor: "ENTREPRENEUR",
+    description: "Submit a funding target and proposed profit-share terms for review.",
+  },
   {
     icon: FileCheck2,
     title: "Review",
-    description: "Business details and documents are assessed.",
+    actor: "PLATFORM AUTHORITY",
+    description: "The platform authority reviews the proposal before a funding pool is created.",
   },
-  { icon: Wallet, title: "Fund", description: "Investors contribute under disclosed terms." },
+  {
+    icon: Wallet,
+    title: "Fund",
+    actor: "INVESTOR",
+    description: "Review the pool target and on-chain terms before choosing whether to contribute.",
+  },
   {
     icon: Handshake,
     title: "Report & Settle",
-    description: "Settle outcomes under the agreed terms.",
+    actor: "POOL PARTICIPANTS",
+    description: "Pool activity is recorded on-chain; outcomes follow agreed terms.",
   },
 ];
 export const securityPrinciples = [

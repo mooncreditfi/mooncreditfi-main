@@ -586,12 +586,41 @@
   font-size: 13px;
   font-weight: 650;
   margin-top: 23px;
-  margin-bottom: 12px;
+  margin-bottom: 7px;
+}
+.step-actor {
+  display: block;
+  color: var(--violet-soft);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
 }
 .step p {
   font-size: 12px;
   color: var(--muted-foreground);
   line-height: 1.85;
+}
+.steps-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 38px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.steps-note {
+  max-width: 430px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 1.7;
+}
+.steps-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
 }
 .security-section {
   background: color-mix(in oklch, var(--card) 50%, var(--background));
@@ -1214,6 +1243,19 @@
     grid-template-columns: 1fr;
     gap: 0;
     margin-top: 35px;
+  }
+  .steps-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 25px;
+  }
+  .steps-actions {
+    width: 100%;
+  }
+  .steps-actions > * {
+    flex: 1;
+    justify-content: center;
   }
   .step {
     padding-left: 61px;
