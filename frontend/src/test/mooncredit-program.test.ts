@@ -92,8 +92,8 @@ describe("MoonCreditFi Anchor client", () => {
     if (!(instruction instanceof TransactionInstruction)) return;
     expect(instruction.data.length).toBe(40);
     expect(Buffer.from(instruction.data.subarray(8))).toEqual(target.toBuffer());
-    expect(instruction.keys[0].isWritable).toBe(true);
-    expect(instruction.keys[1].isSigner).toBe(true);
+    expect(instruction.keys[0]?.isWritable).toBe(true);
+    expect(instruction.keys[1]?.isSigner).toBe(true);
   });
 
   it("detects a deployed proposal IDL with outdated decision instructions", () => {
@@ -127,15 +127,22 @@ describe("MoonCreditFi Anchor client", () => {
       systemProgram: SystemProgram.programId,
     };
 
-    async function buildInstruction(name: string) {
+    async function buildInstruction(name: string): Promise<TransactionInstruction> {
       const method = Reflect.get(program.methods, name);
-      const builder = Reflect.apply(method, program.methods, []);
-      const withAccounts = Reflect.apply(Reflect.get(builder, "accounts"), builder, [accounts]);
-      return Reflect.apply(
-        Reflect.get(withAccounts, "instruction"),
-        withAccounts,
-        [],
-      ) as Promise<TransactionInstruction>;
+      if (typeof method !== "function") throw new Error(`Missing program method: ${name}`);
+      const builder = Reflect.apply(method, program.methods, []) as object;
+      const accountsMethod = Reflect.get(builder, "accounts");
+      if (typeof accountsMethod !== "function")
+        throw new Error(`Missing accounts builder: ${name}`);
+      const withAccounts = Reflect.apply(accountsMethod, builder, [accounts]) as object;
+      const instructionMethod = Reflect.get(withAccounts, "instruction");
+      if (typeof instructionMethod !== "function")
+        throw new Error(`Missing instruction builder: ${name}`);
+      const instruction = await Reflect.apply(instructionMethod, withAccounts, []);
+      if (!(instruction instanceof TransactionInstruction)) {
+        throw new Error(`Program method did not build a transaction instruction: ${name}`);
+      }
+      return instruction;
     }
 
     const approval = await buildInstruction("approveProposal");
@@ -145,7 +152,7 @@ describe("MoonCreditFi Anchor client", () => {
       accounts.rejection,
       accounts.authority,
     ]);
-    expect(approval.keys[3].isSigner).toBe(true);
+    expect(approval.keys[3]?.isSigner).toBe(true);
 
     const rejection = await buildInstruction("rejectProposal");
     expect(rejection.keys.map((key) => key.pubkey)).toEqual([
@@ -155,7 +162,7 @@ describe("MoonCreditFi Anchor client", () => {
       accounts.authority,
       accounts.systemProgram,
     ]);
-    expect(rejection.keys[3].isSigner).toBe(true);
-    expect(rejection.keys[3].isWritable).toBe(true);
+    expect(rejection.keys[3]?.isSigner).toBe(true);
+    expect(rejection.keys[3]?.isWritable).toBe(true);
   });
 });
