@@ -210,9 +210,9 @@ export function WalletConnectButtonClient({
         <div className="wallet-network"><span className="network-badge"><span/><SiSolana className="network-badge-icon" aria-hidden="true"/>Solana {SOLANA_NETWORK}</span></div>
         {connected && address ? <>
           <section className="wallet-detail-card" aria-label="Connected wallet information">
-            <div className="wallet-detail-heading"><img src={wallet?.adapter.icon} alt="" width="36" height="36"/><div><strong>{wallet?.adapter.name ?? "Solana wallet"}</strong><span>{authenticated ? "Authenticated session" : "Connected · not signed in"}</span></div></div>
+            <div className="wallet-detail-heading"><img src={wallet?.adapter.icon} alt="" width="36" height="36"/><div><strong>{wallet?.adapter.name ?? "Solana wallet"}</strong><span className="wallet-session-state">{authenticated ? "Authenticated session" : "Connected · not signed in"}</span></div></div>
             <p className="wallet-detail-label">Public wallet address</p>
-            <div className="wallet-address-row"><code>{address}</code><Button type="button" variant="ghost" size="icon" aria-label="Copy full wallet address" onClick={() => void copyAddress()}>{copied ? <Check/> : <Copy/>}</Button><a href={explorerAddress(address)} target="_blank" rel="noreferrer" aria-label="View wallet on Solana Explorer"><ExternalLink/></a></div>
+            <div className="wallet-address-row"><code title={address}>{address}</code><Button type="button" variant="ghost" size="icon" aria-label="Copy full wallet address" onClick={() => void copyAddress()}>{copied ? <Check/> : <Copy/>}</Button><a href={explorerAddress(address)} target="_blank" rel="noreferrer" aria-label="View wallet on Solana Explorer"><ExternalLink/></a></div>
           </section>
           <section className="wallet-balances" aria-label="Wallet balances">
             <article><span><SiSolana aria-hidden="true"/> SOL</span><strong>{balanceLamports === null ? (balanceError ? "Unavailable" : "Loading…") : `${(balanceLamports / LAMPORTS_PER_SOL).toLocaleString(undefined, { maximumFractionDigits: 4 })} SOL`}</strong><small>Native SOL · confirmed balance</small></article>
