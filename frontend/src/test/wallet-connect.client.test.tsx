@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { WalletConnectButtonClient } from "@/components/wallet/wallet-connect.client";
 import { describe, expect, it, vi } from "vitest";
 
@@ -36,5 +36,18 @@ describe("WalletConnectButtonClient", () => {
     render(<WalletConnectButtonClient />);
 
     expect(screen.getByRole("button", { name: "Open wallet details" })).toBeInTheDocument();
+  });
+
+  it("opens the connected wallet details with address controls", () => {
+    render(<WalletConnectButtonClient />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Open wallet details" }));
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Wallet details" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy full wallet address" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "View wallet on Solana Explorer" }),
+    ).toBeInTheDocument();
   });
 });

@@ -17,11 +17,6 @@
 .wallet-details-dialog > * {
   min-width: 0;
 }
-.wallet-details-dialog [data-slot="dialog-close"] {
-  top: max(12px, env(safe-area-inset-top));
-  right: max(12px, env(safe-area-inset-right));
-  z-index: 2;
-}
 .wallet-details-dialog .wallet-details-header {
   min-width: 0;
   padding-right: 28px;
@@ -81,6 +76,30 @@
 .wallet-detail-heading strong {
   font-size: 1rem;
   letter-spacing: -0.015em;
+  font-size: 0.95rem;
+}
+.wallet-detail-heading .wallet-session-state {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 6px;
+  padding: 4px 9px;
+  border: 1px solid color-mix(in oklch, var(--success) 28%, transparent);
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--success) 9%, transparent);
+  color: var(--success);
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+.wallet-detail-heading .wallet-session-state::before {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
 }
 .wallet-detail-heading span,
 .wallet-detail-label,
@@ -118,9 +137,11 @@
   grid-template-columns: minmax(0, 1fr) 40px 40px;
   align-items: center;
   gap: 7px;
+  gap: 6px;
   min-width: 0;
 }
 .wallet-address-row code {
+  display: block;
   min-width: 0;
   overflow: hidden;
   padding: 11px 12px;
@@ -129,9 +150,15 @@
   background: color-mix(in oklch, var(--background) 78%, transparent);
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in oklch, var(--background) 78%, transparent);
   color: var(--foreground);
   font-size: clamp(0.66rem, 2.6vw, 0.78rem);
   line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .wallet-address-row button,
 .wallet-address-row a {
@@ -333,6 +360,10 @@
   .wallet-address-row {
     grid-template-columns: minmax(0, 1fr) 40px 40px;
     gap: 5px;
+    gap: 6px;
+  }
+  .wallet-address-row code {
+    font-size: 0.7rem;
   }
   .wallet-balances {
     grid-template-columns: repeat(2, minmax(0, 1fr));

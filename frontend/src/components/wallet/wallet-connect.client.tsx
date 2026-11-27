@@ -1,20 +1,11 @@
 import "./wallet-details-styles";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletReadyState } from "@solana/wallet-adapter-base";
-import {
-  Check,
-  Copy,
-  ExternalLink,
-  Loader2,
-  LogOut,
-  ShieldCheck,
-  Wallet as WalletIcon,
-  X,
-} from "lucide-react";
+import { Check, Copy, ExternalLink, Loader2, LogOut, Wallet as WalletIcon, X } from "lucide-react";
 import { SiSolana } from "react-icons/si";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,7 +20,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useAuth } from "@/components/auth-provider";
 
 type WalletConnectProps = {
   authenticated?: boolean;
@@ -41,6 +31,7 @@ const walletLinks: Record<string, string> = {
   Phantom: "https://phantom.app/download",
   Solflare: "https://solflare.com/download",
 };
+const usdcMint = new PublicKey(MOONCREDIT_USDC_MINT);
 const explorerAddress = (address: string) =>
   `https://explorer.solana.com/address/${address}?cluster=${SOLANA_NETWORK}`;
 function shortAddress(address: string): string {
@@ -103,7 +94,7 @@ export function WalletConnectButtonClient({
           setBalanceError(error instanceof Error ? error.message : "Solana RPC request failed.");
       }
       try {
-        const ata = getAssociatedTokenAddressSync(MOONCREDIT_USDC_MINT, publicKey);
+        const ata = getAssociatedTokenAddressSync(usdcMint, publicKey);
         const result = await connection.getTokenAccountBalance(ata, "confirmed");
         if (active) {
           setUsdcBalance(result.value.uiAmountString ?? result.value.amount);
@@ -299,6 +290,10 @@ export function WalletConnectButtonClient({
                       }
                     >
                       {authenticated && <ShieldCheck aria-hidden="true" />}
+                  <img src={wallet?.adapter.icon} alt="" width="36" height="36" />
+                  <div>
+                    <strong>{wallet?.adapter.name ?? "Solana wallet"}</strong>
+                    <span className="wallet-session-state">
                       {authenticated ? "Authenticated session" : "Connected · not signed in"}
                     </span>
                   </div>
@@ -333,6 +328,32 @@ export function WalletConnectButtonClient({
                 <article className="wallet-balance-card">
                   <span className="wallet-balance-label">
                     <SiSolana aria-hidden="true" /> SOL balance
+                <p className="wallet-detail-label">Public wallet address</p>
+                <div className="wallet-address-row">
+                  <code title={address}>{address}</code>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Copy full wallet address"
+                    onClick={() => void copyAddress()}
+                  >
+                    {copied ? <Check /> : <Copy />}
+                  </Button>
+                  <a
+                    href={explorerAddress(address)}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="View wallet on Solana Explorer"
+                  >
+                    <ExternalLink />
+                  </a>
+                </div>
+              </section>
+              <section className="wallet-balances" aria-label="Wallet balances">
+                <article>
+                  <span>
+                    <SiSolana aria-hidden="true" /> SOL
                   </span>
                   <strong>
                     {balanceLamports === null
@@ -345,6 +366,8 @@ export function WalletConnectButtonClient({
                 </article>
                 <article className="wallet-balance-card">
                   <span className="wallet-balance-label">USDC balance</span>
+                <article>
+                  <span>USDC</span>
                   <strong>
                     {usdcBalance !== null
                       ? `${Number(usdcBalance).toLocaleString(undefined, { maximumFractionDigits: 6 })} USDC`
@@ -356,6 +379,8 @@ export function WalletConnectButtonClient({
                     {usdcAccountMissing
                       ? "Receive Devnet USDC to create a token account."
                       : "MoonCreditFi Devnet mint · 6 decimals"}
+                      ? "Create a USDC token account by receiving Devnet USDC."
+                      : `MoonCreditFi Devnet mint · 6 decimals`}
                   </small>
                 </article>
               </section>
@@ -379,11 +404,13 @@ export function WalletConnectButtonClient({
                 {authenticated && (
                   <Button type="button" variant="gold" onClick={() => void signOut()}>
                     <LogOut aria-hidden="true" />
+                    <LogOut />
                     Sign out
                   </Button>
                 )}
                 <Button type="button" variant="quiet" onClick={() => void disconnect()}>
                   <X aria-hidden="true" />
+                  <X />
                   Disconnect wallet
                 </Button>
               </div>
