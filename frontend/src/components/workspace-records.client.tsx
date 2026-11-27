@@ -180,6 +180,35 @@ export function WorkspaceRecordsContent({
       .slice(0, 8);
   }, [businessNames, businesses, documents, entrepreneur, proposals, reports, transactions]);
 
+  async function createBusiness(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!user) return;
+    const form = event.currentTarget;
+    const values = new FormData(form);
+    const name = String(values.get("name") ?? "").trim();
+    if (name.length < 2) {
+      toast.error("Enter a business name with at least two characters.");
+      return;
+    }
+    setSaving(true);
+    const { error: saveError } = await supabase.from("businesses").insert({
+      owner_user_id: user.id,
+      name,
+      description: String(values.get("description") ?? "").trim(),
+      category: String(values.get("category") ?? "").trim() || null,
+      city: String(values.get("city") ?? "").trim() || null,
+      country: String(values.get("country") ?? "").trim() || null,
+    });
+    setSaving(false);
+    if (saveError) {
+      toast.error(`Could not save business: ${saveError.message}`);
+      return;
+    }
+    form.reset();
+    toast.success("Business profile saved.");
+    setReloadKey((key) => key + 1);
+  }
+
   async function uploadDocument(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!user) return;
