@@ -11,8 +11,9 @@ import { useAuth } from "@/components/auth-provider";
 import { supabase } from "@/integrations/supabase/client";
 import { usePools, usePositions } from "@/lib/use-mooncredit";
 import { calculateInvestorPayout } from "@/lib/payouts";
-import { SOLANA_NETWORK } from "@/lib/platform-capabilities";
+import { MOONCREDIT_USDC_MINT, SOLANA_NETWORK } from "@/lib/platform-capabilities";
 import type { Tables } from "@/integrations/supabase/types";
+import { WorkspaceRecordsContent } from "@/components/workspace-records.client";
 
 const explorer = (signature: string) =>
   `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
@@ -151,17 +152,17 @@ export function WorkspaceFeatureContent({
   }
 
   const title =
-    view === "my-investments"
-      ? "My investments"
-      : view === "transactions"
-        ? "Transaction history"
-        : view === "notifications"
-          ? "Notifications"
-          : view === "settings"
-            ? "Settings"
-            : view === "my-businesses"
-              ? "My businesses"
-              : view.replaceAll("-", " ");
+    {
+      overview: entrepreneur ? "Business overview" : "Portfolio overview",
+      "my-investments": "My investments",
+      transactions: "Transactions",
+      notifications: "Notifications",
+      settings: "Settings",
+      "my-businesses": "My businesses",
+      "business-documents": "Business documents",
+      "funding-proposals": "Funding proposals",
+      "business-reports": "Business reports",
+    }[view] ?? view.replaceAll("-", " ");
   const positionsWithPool = useMemo(
     () =>
       positions.map((position) => ({
@@ -170,34 +171,51 @@ export function WorkspaceFeatureContent({
       })),
     [positions, pools],
   );
+  const sections: [string, string][] = entrepreneur
+    ? [
+        ["overview", "Overview"],
+        ["my-businesses", "My businesses"],
+        ["business-documents", "Business documents"],
+        ["funding-proposals", "Funding proposals"],
+        ["business-reports", "Business reports"],
+        ["notifications", "Notifications"],
+        ["settings", "Settings"],
+      ]
+    : [
+        ["overview", "Overview"],
+        ["my-investments", "My investments"],
+        ["transactions", "Transactions"],
+        ["notifications", "Notifications"],
+        ["settings", "Settings"],
+      ];
 
   return (
     <Workspace>
       <WorkspaceTitle
         eyebrow={entrepreneur ? "ENTREPRENEUR WORKSPACE" : "INVESTOR WORKSPACE"}
         title={title}
-        description="Records are retrieved from your connected wallet, Supabase account, or the MoonCreditFi program."
+        description={
+          view === "overview"
+            ? entrepreneur
+              ? "Manage business records, financing requests, and progress updates."
+              : "Review your on-chain positions and indexed transaction activity."
+            : "Private account records and live Devnet activity, shown with their current verification status."
+        }
       >
         <Button variant="quiet" onClick={() => void loadRecords()} disabled={loading}>
           <RefreshCw className={loading ? "animate-spin" : ""} /> Refresh
         </Button>
       </WorkspaceTitle>
-      <nav className="workspace-paths" aria-label="Workspace sections">
-        <Link
-          to={entrepreneur ? "/entrepreneur" : "/dashboard"}
-          search={{ view: entrepreneur ? "my-businesses" : "my-investments" }}
-        >
-          {entrepreneur ? "My businesses" : "My investments"}
-        </Link>
-        <Link to={entrepreneur ? "/entrepreneur" : "/dashboard"} search={{ view: "transactions" }}>
-          Transactions
-        </Link>
-        <Link to={entrepreneur ? "/entrepreneur" : "/dashboard"} search={{ view: "notifications" }}>
-          Notifications
-        </Link>
-        <Link to={entrepreneur ? "/entrepreneur" : "/dashboard"} search={{ view: "settings" }}>
-          Settings
-        </Link>
+      <nav className="workspace-feature-nav" aria-label="Workspace sections">
+        {sections.map(([section, label]) => (
+          <Link
+            key={section}
+            to={entrepreneur ? "/entrepreneur" : "/dashboard"}
+            search={{ view: section }}
+          >
+            {label}
+          </Link>
+        ))}
       </nav>
       {queryError && (
         <div className="workspace-empty" role="alert">
@@ -314,7 +332,9 @@ export function WorkspaceFeatureContent({
                       <td>{tx.instruction_type}</td>
                       <td>
                         {tx.amount_base_units
-                          ? `${(Number(tx.amount_base_units) / 1_000_000).toLocaleString()} USDC`
+                          ? tx.token_mint === MOONCREDIT_USDC_MINT
+                            ? `${(Number(tx.amount_base_units) / 1_000_000).toLocaleString()} USDC`
+                            : `${tx.amount_base_units} base units${tx.token_mint ? ` · ${short(tx.token_mint)}` : ""}`
                           : "—"}
                       </td>
                       <td>{tx.block_time ? new Date(tx.block_time).toLocaleString() : "—"}</td>
@@ -456,9 +476,20 @@ export function WorkspaceFeatureContent({
         </section>
       )}
 
-      {!["my-investments", "transactions", "my-businesses", "notifications", "settings"].includes(
+      {["overview", "business-documents", "funding-proposals", "business-reports"].includes(
         view,
-      ) && (
+      ) && <WorkspaceRecordsContent view={view} entrepreneur={entrepreneur} />}
+      {![
+        "overview",
+        "my-investments",
+        "transactions",
+        "my-businesses",
+        "business-documents",
+        "funding-proposals",
+        "business-reports",
+        "notifications",
+        "settings",
+      ].includes(view) && (
         <div className="workspace-empty">
           <Wallet />
           <h2>Feature integration required</h2>

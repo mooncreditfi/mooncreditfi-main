@@ -1377,6 +1377,352 @@
     padding-top: 42px;
   }
 }
+
+.workspace-feature-nav,
+.workspace-section-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -8px 0 24px;
+}
+.workspace-feature-nav > a,
+.workspace-section-links > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in oklch, var(--card) 88%, transparent);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    background 150ms ease;
+}
+.workspace-feature-nav > a:hover,
+.workspace-section-links > a:hover {
+  border-color: color-mix(in oklch, var(--gold) 46%, var(--border));
+  background: color-mix(in oklch, var(--gold) 7%, var(--card));
+  color: var(--foreground);
+}
+.workspace-records {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.workspace-records-intro {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 8px 2px 2px;
+}
+.workspace-records-intro .eyebrow,
+.workspace-activity-card .eyebrow {
+  margin: 0 0 6px;
+  color: var(--violet-soft);
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.workspace-records-intro h2,
+.workspace-activity-card h2 {
+  margin: 0;
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+}
+.workspace-records-intro > p {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+.workspace-record-form {
+  display: grid;
+  gap: 18px;
+}
+.workspace-record-form h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-size: 1rem;
+}
+.workspace-record-form h3 svg {
+  width: 18px;
+  color: var(--gold);
+}
+.workspace-record-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.workspace-record-form .proposal-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.workspace-record-form .proposal-field > span {
+  color: var(--muted-foreground);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+.workspace-record-form .proposal-field select,
+.workspace-record-form .proposal-field textarea,
+.workspace-record-form .proposal-field input[type="file"] {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--background);
+  color: var(--foreground);
+}
+.workspace-record-form .proposal-field select {
+  min-height: 42px;
+  padding: 8px 11px;
+}
+.workspace-record-form .proposal-field textarea {
+  padding: 11px 12px;
+  line-height: 1.55;
+  resize: vertical;
+}
+.workspace-record-form .proposal-field input[type="file"] {
+  padding: 8px;
+  font-size: 0.75rem;
+}
+.workspace-record-form .proposal-field :focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+.workspace-record-form > button {
+  justify-self: start;
+}
+.workspace-record-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.workspace-record-list {
+  min-width: 0;
+}
+.workspace-record-list .workspace-section-heading {
+  margin-bottom: 4px;
+}
+.workspace-record-list .proposal-record {
+  min-width: 0;
+}
+.workspace-record-list .proposal-record h3,
+.workspace-record-list .proposal-record p {
+  overflow-wrap: anywhere;
+}
+.workspace-record-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  color: var(--muted-foreground);
+  font-size: 0.72rem;
+}
+.workspace-review-feedback {
+  padding: 12px 14px;
+  border-left: 3px solid var(--gold);
+  border-radius: 0 8px 8px 0;
+  background: color-mix(in oklch, var(--gold) 7%, var(--background));
+}
+.workspace-inline-error {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in oklch, var(--destructive) 38%, var(--border));
+  border-radius: 10px;
+  color: var(--destructive);
+  overflow-wrap: anywhere;
+}
+.workspace-record-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.workspace-record-metrics > article {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background:
+    radial-gradient(
+      ellipse at top right,
+      color-mix(in oklch, var(--primary) 12%, transparent),
+      transparent 68%
+    ),
+    var(--card);
+}
+.workspace-record-metrics > article > span {
+  color: var(--muted-foreground);
+  font-size: 0.72rem;
+}
+.workspace-record-metrics > article > strong {
+  overflow-wrap: anywhere;
+  font-size: clamp(1.05rem, 2.4vw, 1.5rem);
+  font-variant-numeric: tabular-nums;
+}
+.workspace-activity-card {
+  min-width: 0;
+}
+.workspace-activity-card .workspace-section-heading > div {
+  min-width: 0;
+}
+.workspace-activity-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.workspace-activity-list li {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto 28px;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.workspace-activity-list li:last-child {
+  border-bottom: 0;
+}
+.workspace-activity-marker {
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+}
+.workspace-activity-list li > div {
+  min-width: 0;
+}
+.workspace-activity-list strong {
+  font-size: 0.82rem;
+}
+.workspace-activity-list p {
+  margin: 4px 0 0;
+  color: var(--muted-foreground);
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+.workspace-activity-list time {
+  color: var(--muted-foreground);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+.workspace-activity-list a {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  color: var(--violet-soft);
+}
+.workspace-activity-list a svg,
+.workspace-section-links svg {
+  width: 16px;
+  height: 16px;
+}
+.workspace-activity-empty {
+  min-height: 180px;
+  padding: 28px 16px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--background) 48%, transparent);
+}
+.workspace-activity-empty > svg {
+  width: 23px;
+  margin-bottom: 10px;
+  color: var(--violet-soft);
+}
+.workspace-activity-empty h3 {
+  margin: 0 0 6px;
+  font-size: 0.93rem;
+}
+.workspace-activity-empty p {
+  max-width: 60ch;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.76rem;
+  line-height: 1.65;
+}
+.workspace-milestones {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+}
+.workspace-section-links {
+  margin: 0;
+}
+.workspace-section-links > a {
+  flex: 1 1 180px;
+}
+@media (max-width: 720px) {
+  .workspace-record-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .workspace-records-intro {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+@media (max-width: 520px) {
+  .workspace-feature-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    scrollbar-width: thin;
+  }
+  .workspace-feature-nav > a {
+    flex: 0 0 auto;
+  }
+  .workspace-record-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .workspace-record-form {
+    padding: 18px;
+  }
+  .workspace-record-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .workspace-record-actions > button {
+    width: 100%;
+  }
+  .workspace-activity-card {
+    padding: 18px;
+  }
+  .workspace-activity-card .workspace-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .workspace-activity-list li {
+    grid-template-columns: 10px minmax(0, 1fr) 28px;
+    gap: 9px;
+  }
+  .workspace-activity-list time {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .workspace-activity-list a {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+  .workspace-section-links > a {
+    flex-basis: 100%;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

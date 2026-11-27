@@ -48,6 +48,7 @@ function EntrepreneurDashboard() {
   const selected = view ?? "overview";
   if (
     [
+      "overview",
       "my-businesses",
       "business-documents",
       "funding-proposals",

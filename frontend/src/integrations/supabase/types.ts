@@ -21,6 +21,51 @@ type BusinessRow = {
   created_at: string;
   updated_at: string;
 };
+type FundingProposalRow = {
+  id: string;
+  business_id: string;
+  owner_user_id: string;
+  title: string;
+  summary: string;
+  requested_amount: number;
+  token_mint: string;
+  entrepreneur_profit_share_bps: number;
+  term_months: number | null;
+  status: string;
+  administrator_feedback: string | null;
+  on_chain_proposal_address: string | null;
+  on_chain_pool_address: string | null;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+type BusinessDocumentRow = {
+  id: string;
+  business_id: string;
+  owner_user_id: string;
+  storage_path: string;
+  original_filename: string;
+  content_type: string;
+  size_bytes: number;
+  verification_status: string;
+  uploaded_at: string;
+  reviewed_at: string | null;
+};
+type BusinessReportRow = {
+  id: string;
+  business_id: string;
+  owner_user_id: string;
+  period_start: string;
+  period_end: string;
+  narrative: string;
+  entrepreneur_reported_revenue: number | null;
+  entrepreneur_reported_costs: number | null;
+  milestones: Json;
+  attachments: Json;
+  created_at: string;
+  updated_at: string;
+};
 type IndexedTransactionRow = {
   id: string;
   signature: string;
@@ -87,6 +132,9 @@ export type Database = {
         years_operating: number;
       }>;
       businesses: Table<BusinessRow>;
+      funding_proposals: Table<FundingProposalRow>;
+      business_documents: Table<BusinessDocumentRow>;
+      business_reports: Table<BusinessReportRow>;
       indexed_transactions: Table<IndexedTransactionRow>;
       notifications: Table<NotificationRow>;
       notification_preferences: Table<{

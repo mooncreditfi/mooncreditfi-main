@@ -46,7 +46,12 @@ function InvestorDashboard() {
     };
   }, [ready]);
   const selected = view ?? "overview";
-  if (["my-investments", "transactions", "notifications", "settings"].includes(selected) && Feature)
+  if (
+    ["overview", "my-investments", "transactions", "notifications", "settings"].includes(
+      selected,
+    ) &&
+    Feature
+  )
     return <Feature view={selected} entrepreneur={false} />;
   return (
     <DashboardContent
