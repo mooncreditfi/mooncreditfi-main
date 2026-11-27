@@ -189,11 +189,6 @@ export function OpportunitiesContentClient() {
                 <p className="opportunity-address">
                   Entrepreneur profit share: {entrepreneurShare}
                 </p>
-                <p className="opportunity-disclosure">
-                  The deployed program does not store business descriptions or supporting documents.
-                  Review the on-chain funding target and entrepreneur profit-share term
-                  independently before contributing.
-                </p>
                 <Button asChild variant={status.toLowerCase() === "open" ? "gold" : "quiet"}>
                   <Link to="/pools">
                     {status.toLowerCase() === "open"
