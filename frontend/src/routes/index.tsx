@@ -14,7 +14,6 @@ import {
   Globe2,
   LockKeyhole,
   FileCheck2,
-  CircleAlert,
   Network,
 } from "lucide-react";
 import { SiSolana } from "react-icons/si";

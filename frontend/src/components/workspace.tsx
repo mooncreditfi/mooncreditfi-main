@@ -238,7 +238,7 @@ export function WorkspaceTitle({
   );
 }
 
-export function AccountGate({
+function AccountGate({
   title = "Records unavailable",
   description = "Required data integrations are not configured yet.",
 }: {
@@ -274,7 +274,7 @@ const entrepreneurViews = [
   "Notifications",
   "Settings",
 ];
-export const viewKey = (label: string) => label.toLowerCase().replaceAll(" ", "-");
+const viewKey = (label: string) => label.toLowerCase().replaceAll(" ", "-");
 export function validateWorkspaceSearch(search: Record<string, unknown>): { view?: string } {
   const allowed = [...investorViews, ...entrepreneurViews].map(viewKey);
   return typeof search["view"] === "string" && allowed.includes(search["view"])

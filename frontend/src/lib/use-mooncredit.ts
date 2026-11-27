@@ -48,11 +48,6 @@ type BusinessProposalAccount = {
   bump: number;
 };
 
-export type BusinessProposalRecord = {
-  publicKey: PublicKey;
-  account: BusinessProposalAccount;
-};
-
 const LEGACY_BUSINESS_PROPOSAL_SIZE = 84;
 const CURRENT_BUSINESS_PROPOSAL_SIZE = 92;
 
