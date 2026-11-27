@@ -34,7 +34,7 @@ flowchart LR
   end
   SupabaseClient --> Supabase
   AuthMiddleware --> Supabase
-  ServerFns --> Gateway[Lovable AI Gateway]
+  ServerFns --> Gateway[Configured AI API]
 ```
 
 ### Main code areas
@@ -122,7 +122,7 @@ The frontend pool workflow uses the Devnet program ID, bundled Anchor IDL, and c
 - **Supabase Auth:** account/session foundation.
 - **Supabase Web3 Auth:** native Solana sign-in; the project provider must be enabled in the Dashboard.
 - **Supabase PostgreSQL:** readiness assessment records, subject to the configured project schema and RLS.
-- **Lovable AI Gateway:** readiness checklist generation from an authenticated server function.
+- **Readiness AI API:** optional OpenAI-compatible readiness checklist generation from an authenticated server function.
 - **Solana Devnet / Anchor:** program config and pool/proposal reads, proposal submission, approved-pool creation, and USDC contributions through Phantom or Solflare.
 
 ### Not yet provisioned
@@ -134,7 +134,7 @@ The frontend pool workflow uses the Devnet program ID, bundled Anchor IDL, and c
 - A reviewer-facing proposal approval interface; the deployed platform authority remains responsible for approvals.
 - Frontend flows for pool activation, capital disbursement, settlement, investor claims, entrepreneur profit claims, and refunds.
 
-Profile and role details are stored in the authenticated Supabase user's metadata; the Supabase user ID is used as the readiness record owner. Readiness queries are filtered by that ID, but the database must also enforce `user_id = auth.uid()` through RLS. Confirm or add those policies in Lovable; do not add or edit `drizzle/` or `supabase/migrations/` manually. Do not expose service-role keys or other secrets in browser code.
+Profile and role details are stored in the authenticated Supabase user's metadata; the Supabase user ID is used as the readiness record owner. Readiness queries are filtered by that ID, but the database must also enforce `user_id = auth.uid()` through RLS. Do not expose service-role keys or other secrets in browser code.
 
 ## Local development
 
@@ -154,6 +154,9 @@ VITE_SUPABASE_URL=
 VITE_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_URL=
 SUPABASE_PUBLISHABLE_KEY=
+READINESS_AI_API_URL=
+READINESS_AI_API_KEY=
+READINESS_AI_MODEL=
 ```
 
 Use the project’s publishable key only. Never commit `.env` or put a service-role key in client-side variables.

@@ -67,7 +67,6 @@ export const generateAssessment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(validate)
   .handler(async ({ data, context }) => {
-    const { generateResponse, GatewayError } = await import("@lovable.dev/ai-gateway");
     const schema = {
       type: "object",
       additionalProperties: false,
@@ -100,25 +99,47 @@ export const generateAssessment = createServerFn({ method: "POST" })
         },
       },
     } as const;
+    const apiUrl = process.env["READINESS_AI_API_URL"] ?? "https://api.openai.com/v1/responses";
+    const apiKey = process.env["READINESS_AI_API_KEY"];
+    const model = process.env["READINESS_AI_MODEL"] ?? "gpt-4.1-mini";
+    if (!apiKey) throw new Error("The readiness assistant is not configured.");
+
     let text = "";
     try {
-      const res = await generateResponse({
-        model: "openai/gpt-6-astra",
-        instructions:
-          "You help entrepreneurs prepare a Mudarabah (profit-sharing, no fixed interest, no guaranteed returns) financing application for MoonCreditFi. Produce a tailored checklist of 8-12 concrete items based only on the submitted business profile and financing goals: documents to gather for their country and stage, financial records, whether the requested amount aligns with the stated use of capital and operating history, whether the proposed profit share and duration need professional review, and risk disclosures. Do not assign a numerical readiness or credit score: the platform has no verified financial statements, documentation, or credit-history data. Never imply information is verified or promise funding, approval or returns. Be specific and practical.",
-        input: JSON.stringify(data),
-        text: { format: { type: "json_schema", name: "readiness", strict: true, schema } },
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${apiKey}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          instructions:
+            "You help entrepreneurs prepare a Mudarabah (profit-sharing, no fixed interest, no guaranteed returns) financing application for MoonCreditFi. Produce a tailored checklist of 8-12 concrete items based only on the submitted business profile and financing goals: documents to gather for their country and stage, financial records, whether the requested amount aligns with the stated use of capital and operating history, whether the proposed profit share and duration need professional review, and risk disclosures. Do not assign a numerical readiness or credit score: the platform has no verified financial statements, documentation, or credit-history data. Never imply information is verified or promise funding, approval or returns. Be specific and practical.",
+          input: JSON.stringify(data),
+          text: { format: { type: "json_schema", name: "readiness", strict: true, schema } },
+        }),
       });
-      for (const item of res.output ?? []) {
-        if (item.type === "message")
-          for (const c of item.content) if (c.type === "output_text") text += c.text;
+      if (!response.ok) {
+        if (response.status === 429)
+          throw new Error("The assistant is busy. Please try again in a minute.");
+        throw new Error("The checklist could not be generated. Please try again.");
       }
+      const payload = (await response.json()) as {
+        output_text?: string;
+        output?: Array<{ content?: Array<{ type?: string; text?: string }> }>;
+      };
+      text =
+        payload.output_text ??
+        payload.output
+          ?.flatMap((item) => item.content ?? [])
+          .filter((content) => content.type === "output_text")
+          .map((content) => content.text ?? "")
+          .join("") ??
+        "";
     } catch (e) {
       console.error(e);
-      if (e instanceof GatewayError && e.httpStatus === 429)
-        throw new Error("The assistant is busy. Please try again in a minute.");
-      if (e instanceof GatewayError && e.httpStatus === 402)
-        throw new Error("AI credits are used up. Please top up to continue.");
+      if (e instanceof Error && /busy/i.test(e.message)) throw e;
       throw new Error("The checklist could not be generated. Please try again.");
     }
     let parsed: { summary: string; checklist: ChecklistItem[] };

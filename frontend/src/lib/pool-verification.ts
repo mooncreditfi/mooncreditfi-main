@@ -41,19 +41,32 @@ export type FundingVerification = {
 };
 
 const emptyChecks = (): FundingVerificationChecks => ({
-  poolFound: false, proposalFound: false, proposalApproved: false, entrepreneurMatches: false,
-  fundingGoalMatches: false, profitShareMatches: false, usdcMintMatches: false, poolOpen: false,
+  poolFound: false,
+  proposalFound: false,
+  proposalApproved: false,
+  entrepreneurMatches: false,
+  fundingGoalMatches: false,
+  profitShareMatches: false,
+  usdcMintMatches: false,
+  poolOpen: false,
   fundingRemaining: false,
 });
 function statusName(status: PoolAccount["status"]): string {
-  return typeof status === "string" ? status.toLowerCase() : (Object.keys(status)[0]?.toLowerCase() ?? "unknown");
+  return typeof status === "string"
+    ? status.toLowerCase()
+    : (Object.keys(status)[0]?.toLowerCase() ?? "unknown");
 }
 
 /**
  * Validate decoded, confirmed on-chain terms without coercing token amounts or basis points to floats.
  * Exposed independently so mismatch and closed-pool behavior can be unit tested without RPC fixtures.
  */
-export function evaluateFundingTerms(poolAddress: PublicKey, pool: PoolAccount, proposalAddress: PublicKey, proposal: ProposalAccount): FundingVerification {
+export function evaluateFundingTerms(
+  poolAddress: PublicKey,
+  pool: PoolAccount,
+  proposalAddress: PublicKey,
+  proposal: ProposalAccount,
+): FundingVerification {
   const checks: FundingVerificationChecks = {
     poolFound: true,
     proposalFound: true,
@@ -75,7 +88,15 @@ export function evaluateFundingTerms(poolAddress: PublicKey, pool: PoolAccount, 
     ["fundingRemaining", "The pool funding goal has already been reached."],
   ];
   const errors = labels.filter(([key]) => !checks[key]).map(([, label]) => label);
-  return { verified: errors.length === 0, checks, errors, poolAddress, proposalAddress, pool, proposal };
+  return {
+    verified: errors.length === 0,
+    checks,
+    errors,
+    poolAddress,
+    proposalAddress,
+    pool,
+    proposal,
+  };
 }
 
 function accountDiscriminator(name: "mudarabahPool" | "businessProposal") {
@@ -83,12 +104,23 @@ function accountDiscriminator(name: "mudarabahPool" | "businessProposal") {
   if (!account) throw new Error(`Bundled IDL is missing ${name}.`);
   return Uint8Array.from(account.discriminator);
 }
-function assertOwnedAndDiscriminated(info: Awaited<ReturnType<Connection["getAccountInfo"]>>, address: PublicKey, name: "mudarabahPool" | "businessProposal") {
-  if (!info) throw new Error(`${name} account ${address.toBase58()} was not found on Solana ${"Devnet"}.`);
-  if (!info.owner.equals(moonCreditProgramId)) throw new Error(`${name} account is not owned by the configured MoonCreditFi program.`);
+function assertOwnedAndDiscriminated(
+  info: Awaited<ReturnType<Connection["getAccountInfo"]>>,
+  address: PublicKey,
+  name: "mudarabahPool" | "businessProposal",
+) {
+  if (!info)
+    throw new Error(`${name} account ${address.toBase58()} was not found on Solana ${"Devnet"}.`);
+  if (!info.owner.equals(moonCreditProgramId))
+    throw new Error(`${name} account is not owned by the configured MoonCreditFi program.`);
   const expected = accountDiscriminator(name);
-  if (info.data.length < expected.length || expected.some((byte, index) => info.data[index] !== byte)) {
-    throw new Error(`${name} account discriminator does not match the checked-in MoonCreditFi IDL.`);
+  if (
+    info.data.length < expected.length ||
+    expected.some((byte, index) => info.data[index] !== byte)
+  ) {
+    throw new Error(
+      `${name} account discriminator does not match the checked-in MoonCreditFi IDL.`,
+    );
   }
 }
 
@@ -111,13 +143,18 @@ export async function fetchFundingVerification(
     const proposalInfo = await connection.getAccountInfo(proposalAddress, "confirmed");
     assertOwnedAndDiscriminated(proposalInfo, proposalAddress, "businessProposal");
     checks.proposalFound = true;
-    proposal = program.coder.accounts.decode("businessProposal", proposalInfo!.data) as ProposalAccount;
+    proposal = program.coder.accounts.decode(
+      "businessProposal",
+      proposalInfo!.data,
+    ) as ProposalAccount;
     return evaluateFundingTerms(poolAddress, pool, proposalAddress, proposal);
   } catch (error) {
     return {
       verified: false,
       checks,
-      errors: [error instanceof Error ? error.message : "Could not verify the on-chain pool and proposal."],
+      errors: [
+        error instanceof Error ? error.message : "Could not verify the on-chain pool and proposal.",
+      ],
       poolAddress,
       proposalAddress,
       pool,
@@ -129,14 +166,27 @@ export async function fetchFundingVerification(
 /** Structural IDL guard. It does not claim that a source checkout proves the deployed binary's ABI. */
 export function checkFundingVerificationIdl() {
   const required: Record<string, string[]> = {
-    mudarabahPool: ["proposal", "entrepreneur", "mint", "fundingGoal", "totalContributed", "entrepreneurProfitBps", "status"],
+    mudarabahPool: [
+      "proposal",
+      "entrepreneur",
+      "mint",
+      "fundingGoal",
+      "totalContributed",
+      "entrepreneurProfitBps",
+      "status",
+    ],
     businessProposal: ["entrepreneur", "fundingGoal", "entrepreneurProfitBps", "approved"],
   };
   const issues = Object.entries(required).flatMap(([name, expected]) => {
     const accountType = moonCreditIdl.types.find((type) => type.name === name);
-    if (!accountType || accountType.type.kind !== "struct") return [`${name} struct is missing from the IDL`];
-    const actual = accountType.type.fields.map((field) => field.name);
-    return expected.filter((field) => !actual.includes(field)).map((field) => `${name}.${field} is missing from the IDL`);
+    if (!accountType || accountType.type.kind !== "struct")
+      return [`${name} struct is missing from the IDL`];
+    const actual: string[] = accountType.type.fields.map((field) => field.name);
+    return expected
+      .filter((field) => !actual.includes(field))
+      .map((field) => `${name}.${field} is missing from the IDL`);
   });
-  return issues.length ? { compatible: false as const, issues } : { compatible: true as const, issues: [] as string[] };
+  return issues.length
+    ? { compatible: false as const, issues }
+    : { compatible: true as const, issues: [] as string[] };
 }

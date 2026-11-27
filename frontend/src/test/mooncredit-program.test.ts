@@ -5,6 +5,7 @@ import {
   PublicKey,
   SystemProgram,
   TransactionInstruction,
+  type AccountMeta,
 } from "@solana/web3.js";
 import { describe, expect, it } from "vitest";
 import { checkProposalInstructionCompatibility, moonCreditIdl } from "@/lib/mooncredit-program";
@@ -92,8 +93,8 @@ describe("MoonCreditFi Anchor client", () => {
     if (!(instruction instanceof TransactionInstruction)) return;
     expect(instruction.data.length).toBe(40);
     expect(Buffer.from(instruction.data.subarray(8))).toEqual(target.toBuffer());
-    expect(instruction.keys[0].isWritable).toBe(true);
-    expect(instruction.keys[1].isSigner).toBe(true);
+    expect(instruction.keys[0]?.isWritable).toBe(true);
+    expect(instruction.keys[1]?.isSigner).toBe(true);
   });
 
   it("detects a deployed proposal IDL with outdated decision instructions", () => {
@@ -128,9 +129,10 @@ describe("MoonCreditFi Anchor client", () => {
     };
 
     async function buildInstruction(name: string) {
-      const method = Reflect.get(program.methods, name);
-      const builder = Reflect.apply(method, program.methods, []);
-      const withAccounts = Reflect.apply(Reflect.get(builder, "accounts"), builder, [accounts]);
+      const method = Reflect.get(program.methods, name) as (...args: unknown[]) => unknown;
+      const builder = Reflect.apply(method, program.methods, []) as object;
+      const accountsMethod = Reflect.get(builder, "accounts") as (...args: unknown[]) => unknown;
+      const withAccounts = Reflect.apply(accountsMethod, builder, [accounts]) as object;
       return Reflect.apply(
         Reflect.get(withAccounts, "instruction"),
         withAccounts,
@@ -139,23 +141,23 @@ describe("MoonCreditFi Anchor client", () => {
     }
 
     const approval = await buildInstruction("approveProposal");
-    expect(approval.keys.map((key) => key.pubkey)).toEqual([
+    expect(approval.keys.map((key: AccountMeta) => key.pubkey)).toEqual([
       accounts.config,
       accounts.proposal,
       accounts.rejection,
       accounts.authority,
     ]);
-    expect(approval.keys[3].isSigner).toBe(true);
+    expect(approval.keys[3]?.isSigner).toBe(true);
 
     const rejection = await buildInstruction("rejectProposal");
-    expect(rejection.keys.map((key) => key.pubkey)).toEqual([
+    expect(rejection.keys.map((key: AccountMeta) => key.pubkey)).toEqual([
       accounts.config,
       accounts.proposal,
       accounts.rejection,
       accounts.authority,
       accounts.systemProgram,
     ]);
-    expect(rejection.keys[3].isSigner).toBe(true);
-    expect(rejection.keys[3].isWritable).toBe(true);
+    expect(rejection.keys[3]?.isSigner).toBe(true);
+    expect(rejection.keys[3]?.isWritable).toBe(true);
   });
 });
