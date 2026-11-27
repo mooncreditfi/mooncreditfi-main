@@ -142,7 +142,6 @@ export type Database = {
         in_app_enabled: boolean;
         updated_at: string;
       }>;
-      [_ in never]: never;
     };
     Views: { [_ in never]: never };
     Functions: { [_ in never]: never };
@@ -182,12 +181,14 @@ export type TablesInsert<
     : never) = never,
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I;
+      Insert: infer Insert;
     }
-    ? I
+    ? Insert
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions]["Insert"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends { Insert: infer Insert }
+      ? Insert
+      : never
     : never;
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
@@ -199,11 +200,13 @@ export type TablesUpdate<
     : never) = never,
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U;
+      Update: infer Update;
     }
-    ? U
+    ? Update
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions]["Update"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends { Update: infer Update }
+      ? Update
+      : never
     : never;
 export const Constants = { public: { Enums: {} } } as const;

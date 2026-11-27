@@ -34,7 +34,7 @@ flowchart LR
   end
   SupabaseClient --> Supabase
   AuthMiddleware --> Supabase
-  ServerFns --> Gateway[Lovable AI Gateway]
+  ServerFns --> Gateway[AI Gateway]
 ```
 
 ### Main code areas
@@ -121,10 +121,10 @@ The frontend pool workflow uses the Devnet program ID, bundled Anchor IDL, and c
 
 - **Supabase Auth:** account/session foundation.
 - **Supabase Web3 Auth:** native Solana sign-in; the project provider must be enabled in the Dashboard.
-- **Supabase PostgreSQL:** owner-scoped business profiles, funding proposals, document metadata, business reports, notification preferences, and notifications. Apply the workspace schema below before using these pages.
+- **Supabase PostgreSQL:** readiness assessments and owner-scoped business profiles, funding proposals, document metadata, business reports, notification preferences, and notifications. Apply the workspace schema below before using the workspace pages.
 - **Supabase Storage:** private business-document bucket with owner-folder policies, provisioned by the same schema script.
 - **Transaction history:** investor activity reads confirmed/finalized rows from `indexed_transactions`; a trusted server-side indexer must write these records.
-- **Lovable AI Gateway:** readiness checklist generation from an authenticated server function.
+- **AI Gateway:** readiness checklist generation from an authenticated server function.
 - **Solana Devnet / Anchor:** program config and pool/proposal reads, proposal submission, approved-pool creation, and USDC contributions through Phantom or Solflare.
 
 ### Not yet provisioned
@@ -141,6 +141,7 @@ Profile and role details are stored in the authenticated Supabase user's metadat
 ### Apply the workspace database schema
 
 In the Supabase Dashboard for the same project configured in the app, open **SQL Editor**, create a query, paste the contents of [`supabase/migrations/20261126000100_platform_records.sql`](./supabase/migrations/20261126000100_platform_records.sql), and run it. It creates the business, proposal, private document metadata, report, notification, notification-preference, indexed transaction, and audit tables; applies row-level security and workflow guards; and provisions the private `mooncredit-business-documents` Storage bucket with owner-folder access policies. It does not create an indexer or reviewer service. Run it with an authorized project owner account and inspect any SQL errors before using the workspace.
+Readiness records are filtered by the authenticated Supabase user ID; confirm the project enforces `user_id = auth.uid()` through RLS before relying on the feature. Do not expose service-role keys or other secrets in browser code.
 
 ## Local development
 

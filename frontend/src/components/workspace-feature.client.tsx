@@ -37,8 +37,8 @@ export function WorkspaceFeatureContent({
   entrepreneur: boolean;
 }) {
   const wallet = useWallet();
-  const auth = useAuth();
-  const user = auth.user;
+  const { user, signOut } = useAuth();
+  const walletAddress = wallet.publicKey?.toBase58();
   const poolsQuery = usePools();
   const positionsQuery = usePositions(wallet.publicKey);
   const pools = useMemo(() => poolsQuery.data ?? [], [poolsQuery.data]);
@@ -50,15 +50,15 @@ export function WorkspaceFeatureContent({
   const [queryError, setQueryError] = useState("");
 
   const loadRecords = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user) return;
     setLoading(true);
     setQueryError("");
     try {
-      if (view === "transactions" && wallet.publicKey) {
+      if (view === "transactions" && walletAddress) {
         const { data, error } = await supabase
           .from("indexed_transactions")
           .select("*")
-          .eq("wallet_address", wallet.publicKey.toBase58())
+          .eq("wallet_address", walletAddress)
           .in("transaction_status", ["confirmed", "finalized"])
           .order("block_time", { ascending: false })
           .limit(100);
@@ -88,7 +88,7 @@ export function WorkspaceFeatureContent({
     } finally {
       setLoading(false);
     }
-  }, [entrepreneur, user, view, wallet.publicKey]);
+  }, [entrepreneur, user, view, walletAddress]);
 
   useEffect(() => {
     void loadRecords();
@@ -97,7 +97,8 @@ export function WorkspaceFeatureContent({
   async function createBusiness(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!user) return;
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const name = String(form.get("name") ?? "").trim();
     const description = String(form.get("description") ?? "").trim();
     const category = String(form.get("category") ?? "").trim();
@@ -118,7 +119,7 @@ export function WorkspaceFeatureContent({
       toast.error(`Could not save business: ${error.message}`);
       return;
     }
-    event.currentTarget.reset();
+    formElement.reset();
     toast.success("Business profile saved.");
     await loadRecords();
   }
@@ -461,8 +462,7 @@ export function WorkspaceFeatureContent({
             <Button
               variant="gold"
               onClick={() =>
-                void auth
-                  .signOut()
+                void signOut()
                   .then(() => toast.success("Signed out."))
                   .catch((error: unknown) =>
                     toast.error(error instanceof Error ? error.message : "Could not sign out."),

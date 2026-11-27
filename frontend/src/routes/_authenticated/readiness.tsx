@@ -22,7 +22,6 @@ export const Route = createFileRoute("/_authenticated/readiness")({
   component: Readiness,
 });
 
-type Assessment = Awaited<ReturnType<typeof listAssessments>>[number];
 const fields: { name: keyof ReadinessInput; label: string; type?: string; area?: boolean }[] = [
   { name: "business_name", label: "Business name" },
   { name: "industry", label: "Industry" },

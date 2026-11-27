@@ -1,7 +1,7 @@
 import "./wallet-details-styles";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletReadyState } from "@solana/wallet-adapter-base";
@@ -29,7 +29,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useAuth } from "@/components/auth-provider";
 
 type WalletConnectProps = {
   authenticated?: boolean;
@@ -41,6 +40,7 @@ const walletLinks: Record<string, string> = {
   Phantom: "https://phantom.app/download",
   Solflare: "https://solflare.com/download",
 };
+const usdcMint = new PublicKey(MOONCREDIT_USDC_MINT);
 const explorerAddress = (address: string) =>
   `https://explorer.solana.com/address/${address}?cluster=${SOLANA_NETWORK}`;
 function shortAddress(address: string): string {
@@ -103,7 +103,7 @@ export function WalletConnectButtonClient({
           setBalanceError(error instanceof Error ? error.message : "Solana RPC request failed.");
       }
       try {
-        const ata = getAssociatedTokenAddressSync(MOONCREDIT_USDC_MINT, publicKey);
+        const ata = getAssociatedTokenAddressSync(usdcMint, publicKey);
         const result = await connection.getTokenAccountBalance(ata, "confirmed");
         if (active) {
           setUsdcBalance(result.value.uiAmountString ?? result.value.amount);
@@ -311,7 +311,7 @@ export function WalletConnectButtonClient({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      aria-label={copied ? "Wallet address copied" : "Copy wallet address"}
+                      aria-label={copied ? "Wallet address copied" : "Copy full wallet address"}
                       title={copied ? "Copied" : "Copy address"}
                       onClick={() => void copyAddress()}
                     >
