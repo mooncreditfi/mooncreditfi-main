@@ -201,9 +201,9 @@ export function WalletConnectButtonClient({
 
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="wallet-dialog wallet-details-dialog">
-        <DialogHeader>
-          <DialogTitle>{connected ? "Wallet details" : "Connect a wallet"}</DialogTitle>
-          <DialogDescription>
+        <DialogHeader className="wallet-details-header">
+          <DialogTitle className="wallet-details-title">{connected ? "Wallet details" : "Connect a wallet"}</DialogTitle>
+          <DialogDescription className="wallet-details-description">
             {connected ? "Wallet information and live balances from Solana Devnet." : "Connect Phantom or Solflare. Signing in is separate from connecting and never submits a transaction."}
           </DialogDescription>
         </DialogHeader>
