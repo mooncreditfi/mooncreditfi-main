@@ -2,7 +2,7 @@
 
 **Trust Before Capital.** MoonCreditFi is an early-stage platform for reputation-aware Mudarabah business financing. This repository contains the public landing page and application foundations for entrepreneurs and investors.
 
-> **Current status:** The landing page, Supabase native Solana Web3 sign-in, profile/role onboarding, readiness checklist, and Phantom/Solflare connection are available. On Solana Devnet, the pool workspace reads live program configuration, proposals, and pools; entrepreneurs can submit proposals and create pools after platform-authority approval, and investors can contribute Devnet USDC to open pools. Transactions require explicit wallet confirmation. Sign-in does not approve roles or proposals. The Supabase Web3 provider and app redirect URLs must be enabled in the Supabase Dashboard. Private business-document storage and reputation signals are not enabled, and opportunities remain empty until approved on-chain data exists.
+> **Current status:** The landing page, Supabase native Solana Web3 sign-in, profile/role onboarding, readiness checklist, and Phantom/Solflare connection are available. On Solana Devnet, the pool workspace reads live program configuration, proposals, and pools; entrepreneurs can submit proposals and create pools after platform-authority approval, and investors can contribute Devnet USDC to open pools. Transactions require explicit wallet confirmation. Sign-in does not approve roles or proposals. Entrepreneur business profiles, funding proposal drafts/submission, private document uploads, business reports, and notifications use the included Supabase schema after it is applied to the project. Document scanning and administrative review still require trusted server-side services. The Supabase Web3 provider and app redirect URLs must be enabled in the Supabase Dashboard.
 
 ## Architecture
 
@@ -121,20 +121,26 @@ The frontend pool workflow uses the Devnet program ID, bundled Anchor IDL, and c
 
 - **Supabase Auth:** account/session foundation.
 - **Supabase Web3 Auth:** native Solana sign-in; the project provider must be enabled in the Dashboard.
-- **Supabase PostgreSQL:** readiness assessment records, subject to the configured project schema and RLS.
+- **Supabase PostgreSQL:** owner-scoped business profiles, funding proposals, document metadata, business reports, notification preferences, and notifications. Apply the workspace schema below before using these pages.
+- **Supabase Storage:** private business-document bucket with owner-folder policies, provisioned by the same schema script.
+- **Transaction history:** investor activity reads confirmed/finalized rows from `indexed_transactions`; a trusted server-side indexer must write these records.
 - **Lovable AI Gateway:** readiness checklist generation from an authenticated server function.
 - **Solana Devnet / Anchor:** program config and pool/proposal reads, proposal submission, approved-pool creation, and USDC contributions through Phantom or Solflare.
 
 ### Not yet provisioned
 
-- Backend-enforced role tables and private business/investment records.
-- Business, ownership, proposal, pool, investment, update, settlement, audit, and notification records.
-- Private document storage and upload scanning.
-- Business verification, private document storage, and reputation signals.
+- Backend-enforced role tables and investment records.
+- A trusted document malware scanner and reviewer service.
+- A server-side transaction indexer; without it, portfolio history shows an honest empty state.
+- Business verification and reputation signals.
 - A reviewer-facing proposal approval interface; the deployed platform authority remains responsible for approvals.
 - Frontend flows for pool activation, capital disbursement, settlement, investor claims, entrepreneur profit claims, and refunds.
 
-Profile and role details are stored in the authenticated Supabase user's metadata; the Supabase user ID is used as the readiness record owner. Readiness queries are filtered by that ID, but the database must also enforce `user_id = auth.uid()` through RLS. Confirm or add those policies in Lovable; do not add or edit `drizzle/` or `supabase/migrations/` manually. Do not expose service-role keys or other secrets in browser code.
+Profile and role details are stored in the authenticated Supabase user's metadata. The platform records migration enforces owner isolation with RLS; frontend role checks do not replace backend authorization. Business reports are entrepreneur-submitted statements, not verified financial statements. Do not expose service-role keys or other secrets in browser code.
+
+### Apply the workspace database schema
+
+In the Supabase Dashboard for the same project configured in the app, open **SQL Editor**, create a query, paste the contents of [`supabase/migrations/20261126000100_platform_records.sql`](./supabase/migrations/20261126000100_platform_records.sql), and run it. It creates the business, proposal, private document metadata, report, notification, notification-preference, indexed transaction, and audit tables; applies row-level security and workflow guards; and provisions the private `mooncredit-business-documents` Storage bucket with owner-folder access policies. It does not create an indexer or reviewer service. Run it with an authorized project owner account and inspect any SQL errors before using the workspace.
 
 ## Local development
 
