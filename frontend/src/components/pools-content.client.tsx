@@ -163,34 +163,8 @@ export function PoolsContentClient() {
   const [entrepreneurProfitBps, setEntrepreneurProfitBps] = useState("2000");
   const [termDays, setTermDays] = useState("90");
   const [contributionAmounts, setContributionAmounts] = useState<Record<string, string>>({});
-  const [settlementAmounts, setSettlementAmounts] = useState<Record<string, string>>({});
   const [poolSearch, setPoolSearch] = useState("");
   const [poolStatusFilter, setPoolStatusFilter] = useState("all");
-
-  async function sendPoolTransaction(
-    description: string,
-    buildInstruction: () => Promise<TransactionInstruction>,
-  ): Promise<string | undefined> {
-    if (!anchorWallet) {
-      toast.error("Connect a Solana wallet to continue.");
-      return undefined;
-    }
-    setBusy(true);
-    try {
-      const transaction = new Transaction().add(await buildInstruction());
-      const signature = await program.provider.sendAndConfirm?.(transaction);
-      if (!signature) throw new Error("The Anchor provider cannot submit this transaction.");
-      setRecentSignature(signature);
-      txToast(signature, description);
-      await queryClient.invalidateQueries({ queryKey: moonCreditQueryKeys.all });
-      return signature;
-    } catch (transactionError) {
-      toast.error(errorMessage(transactionError));
-      return undefined;
-    } finally {
-      setBusy(false);
-    }
-  }
 
   async function refresh() {
     await Promise.all([
@@ -487,6 +461,7 @@ export function PoolsContentClient() {
             tokenProgram: TOKEN_PROGRAM_ID,
           })
           .instruction(),
+      publicKey,
     );
   }
 
@@ -529,6 +504,7 @@ export function PoolsContentClient() {
             systemProgram: SystemProgram.programId,
           })
           .instruction(),
+      publicKey,
     );
     if (signature) {
       setSettlementAmounts((current) => ({ ...current, [key]: "" }));
@@ -548,19 +524,22 @@ export function PoolsContentClient() {
       return;
     }
     const investorTokenAccount = getAssociatedTokenAddressSync(moonCreditUsdcMint, publicKey);
-    await sendPoolTransaction(`Refund claimed for pool ${shortKey(pool.publicKey)}.`, () =>
-      program.methods
-        .claimRefund()
-        .accounts({
-          pool: pool.publicKey,
-          position: position.publicKey,
-          vault: pool.account.vault,
-          usdcMint: moonCreditUsdcMint,
-          investorTokenAccount,
-          investor: publicKey,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .instruction(),
+    await sendPoolTransaction(
+      `Refund claimed for pool ${shortKey(pool.publicKey)}.`,
+      () =>
+        program.methods
+          .claimRefund()
+          .accounts({
+            pool: pool.publicKey,
+            position: position.publicKey,
+            vault: pool.account.vault,
+            usdcMint: moonCreditUsdcMint,
+            investorTokenAccount,
+            investor: publicKey,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .instruction(),
+      publicKey,
     );
   }
 
@@ -575,19 +554,22 @@ export function PoolsContentClient() {
       return;
     }
     const investorTokenAccount = getAssociatedTokenAddressSync(moonCreditUsdcMint, publicKey);
-    await sendPoolTransaction(`Distribution claimed for pool ${shortKey(pool.publicKey)}.`, () =>
-      program.methods
-        .claimDistribution()
-        .accounts({
-          pool: pool.publicKey,
-          position: position.publicKey,
-          vault: pool.account.vault,
-          usdcMint: moonCreditUsdcMint,
-          investorTokenAccount,
-          investor: publicKey,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .instruction(),
+    await sendPoolTransaction(
+      `Distribution claimed for pool ${shortKey(pool.publicKey)}.`,
+      () =>
+        program.methods
+          .claimDistribution()
+          .accounts({
+            pool: pool.publicKey,
+            position: position.publicKey,
+            vault: pool.account.vault,
+            usdcMint: moonCreditUsdcMint,
+            investorTokenAccount,
+            investor: publicKey,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .instruction(),
+      publicKey,
     );
   }
 
@@ -617,6 +599,7 @@ export function PoolsContentClient() {
             tokenProgram: TOKEN_PROGRAM_ID,
           })
           .instruction(),
+      publicKey,
     );
   }
 
