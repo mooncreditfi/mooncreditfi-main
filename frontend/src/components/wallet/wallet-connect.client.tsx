@@ -279,6 +279,17 @@ export function WalletConnectButtonClient({
             <>
               <section className="wallet-detail-card" aria-label="Connected wallet information">
                 <div className="wallet-detail-heading">
+                  <img src={wallet?.adapter.icon} alt="" width="40" height="40" />
+                  <div className="wallet-detail-identity">
+                    <strong>{wallet?.adapter.name ?? "Solana wallet"}</strong>
+                    <span
+                      className={
+                        authenticated
+                          ? "wallet-session-status is-authenticated"
+                          : "wallet-session-status"
+                      }
+                    >
+                      {authenticated && <ShieldCheck aria-hidden="true" />}
                   <img src={wallet?.adapter.icon} alt="" width="36" height="36" />
                   <div>
                     <strong>{wallet?.adapter.name ?? "Solana wallet"}</strong>
@@ -287,6 +298,36 @@ export function WalletConnectButtonClient({
                     </span>
                   </div>
                 </div>
+                <div className="wallet-address-section">
+                  <p className="wallet-detail-label">Public wallet address</p>
+                  <div className="wallet-address-row">
+                    <code title={address}>{address}</code>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label={copied ? "Wallet address copied" : "Copy wallet address"}
+                      title={copied ? "Copied" : "Copy address"}
+                      onClick={() => void copyAddress()}
+                    >
+                      {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+                    </Button>
+                    <a
+                      href={explorerAddress(address)}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label="View wallet on Solana Explorer"
+                      title="View on Solana Explorer"
+                    >
+                      <ExternalLink aria-hidden="true" />
+                    </a>
+                  </div>
+                </div>
+              </section>
+              <section className="wallet-balances" aria-label="Wallet balances">
+                <article className="wallet-balance-card">
+                  <span className="wallet-balance-label">
+                    <SiSolana aria-hidden="true" /> SOL balance
                 <p className="wallet-detail-label">Public wallet address</p>
                 <div className="wallet-address-row">
                   <code title={address}>{address}</code>
@@ -323,6 +364,8 @@ export function WalletConnectButtonClient({
                   </strong>
                   <small>Native SOL · confirmed balance</small>
                 </article>
+                <article className="wallet-balance-card">
+                  <span className="wallet-balance-label">USDC balance</span>
                 <article>
                   <span>USDC</span>
                   <strong>
@@ -334,6 +377,8 @@ export function WalletConnectButtonClient({
                   </strong>
                   <small>
                     {usdcAccountMissing
+                      ? "Receive Devnet USDC to create a token account."
+                      : "MoonCreditFi Devnet mint · 6 decimals"}
                       ? "Create a USDC token account by receiving Devnet USDC."
                       : `MoonCreditFi Devnet mint · 6 decimals`}
                   </small>
@@ -358,11 +403,13 @@ export function WalletConnectButtonClient({
                 )}
                 {authenticated && (
                   <Button type="button" variant="gold" onClick={() => void signOut()}>
+                    <LogOut aria-hidden="true" />
                     <LogOut />
                     Sign out
                   </Button>
                 )}
                 <Button type="button" variant="quiet" onClick={() => void disconnect()}>
+                  <X aria-hidden="true" />
                   <X />
                   Disconnect wallet
                 </Button>
