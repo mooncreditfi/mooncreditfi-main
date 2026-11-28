@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   gap: clamp(14px, 2.5vw, 20px);
-  width: min(560px, calc(100vw - 32px));
+  width: min(580px, calc(100vw - 32px));
   max-width: 100%;
   max-height: min(88vh, 760px);
   max-height: min(88dvh, 760px);
@@ -13,6 +13,15 @@
   -webkit-overflow-scrolling: touch;
   padding: clamp(16px, 4vw, 24px);
   padding-bottom: max(clamp(16px, 4vw, 24px), env(safe-area-inset-bottom));
+  border-color: color-mix(in oklch, var(--border) 78%, var(--primary));
+  background:
+    radial-gradient(
+      ellipse at top right,
+      color-mix(in oklch, var(--primary) 9%, transparent),
+      transparent 46%
+    ),
+    var(--background);
+  box-shadow: 0 24px 70px color-mix(in oklch, var(--background) 55%, transparent);
 }
 .wallet-details-dialog > * {
   min-width: 0;
@@ -33,6 +42,26 @@
   overflow-wrap: anywhere;
   word-break: normal;
 }
+.wallet-details-dialog .wallet-network .network-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid color-mix(in oklch, var(--success) 22%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--success) 6%, var(--card));
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.wallet-details-dialog .wallet-network .network-badge > span:first-child {
+  width: 7px;
+  height: 7px;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--success) 14%, transparent);
+}
+.wallet-details-dialog .wallet-network .network-badge-icon {
+  width: 15px;
+  height: 15px;
+}
 .wallet-details-dialog [data-radix-dialog-close] {
   top: max(12px, env(safe-area-inset-top));
   right: max(12px, env(safe-area-inset-right));
@@ -43,8 +72,9 @@
   min-width: 0;
   border: 1px solid var(--border);
   border-radius: 16px;
-  background: color-mix(in oklch, var(--card) 92%, var(--primary));
+  background: color-mix(in oklch, var(--card) 94%, var(--primary));
   padding: clamp(14px, 3vw, 20px);
+  box-shadow: 0 8px 26px color-mix(in oklch, var(--background) 35%, transparent);
 }
 .wallet-detail-heading {
   display: flex;
@@ -74,32 +104,8 @@
   overflow-wrap: anywhere;
 }
 .wallet-detail-heading strong {
-  font-size: 1rem;
+  font-size: 1.05rem;
   letter-spacing: -0.015em;
-  font-size: 0.95rem;
-}
-.wallet-detail-heading .wallet-session-state {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  width: fit-content;
-  max-width: 100%;
-  margin-top: 6px;
-  padding: 4px 9px;
-  border: 1px solid color-mix(in oklch, var(--success) 28%, transparent);
-  border-radius: 999px;
-  background: color-mix(in oklch, var(--success) 9%, transparent);
-  color: var(--success);
-  font-size: 0.68rem;
-  line-height: 1.2;
-}
-.wallet-detail-heading .wallet-session-state::before {
-  width: 6px;
-  height: 6px;
-  flex: 0 0 6px;
-  border-radius: 50%;
-  background: currentColor;
-  content: "";
 }
 .wallet-detail-heading span,
 .wallet-detail-label,
@@ -136,7 +142,6 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 40px 40px;
   align-items: center;
-  gap: 7px;
   gap: 6px;
   min-width: 0;
 }
@@ -148,14 +153,9 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   background: color-mix(in oklch, var(--background) 78%, transparent);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding: 9px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: color-mix(in oklch, var(--background) 78%, transparent);
   color: var(--foreground);
   font-size: clamp(0.66rem, 2.6vw, 0.78rem);
+  font-variant-numeric: tabular-nums;
   line-height: 1.5;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -181,6 +181,11 @@
   border-color: color-mix(in oklch, var(--primary) 55%, var(--border));
   background: color-mix(in oklch, var(--primary) 10%, var(--background));
 }
+.wallet-address-row button:focus-visible,
+.wallet-address-row a:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
 .wallet-address-row a {
   color: var(--violet-soft);
 }
@@ -191,6 +196,12 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+.wallet-balances .wallet-balance-card:first-child {
+  border-top-color: color-mix(in oklch, var(--violet-soft) 42%, var(--border));
+}
+.wallet-balances .wallet-balance-card:last-child {
+  border-top-color: color-mix(in oklch, var(--gold) 48%, var(--border));
 }
 .wallet-balances article span,
 .wallet-balances article strong,
@@ -359,7 +370,6 @@
   }
   .wallet-address-row {
     grid-template-columns: minmax(0, 1fr) 40px 40px;
-    gap: 5px;
     gap: 6px;
   }
   .wallet-address-row code {
