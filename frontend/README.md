@@ -34,7 +34,7 @@ flowchart LR
   end
   SupabaseClient --> Supabase
   AuthMiddleware --> Supabase
-  ServerFns --> Gateway[AI Gateway]
+  ServerFns --> ReadinessAI[Configured AI service]
 ```
 
 ### Main code areas
@@ -124,7 +124,7 @@ The frontend pool workflow uses the Devnet program ID, bundled Anchor IDL, and c
 - **Supabase PostgreSQL:** readiness assessments and owner-scoped business profiles, funding proposals, document metadata, business reports, notification preferences, and notifications. Apply the workspace schema below before using the workspace pages.
 - **Supabase Storage:** private business-document bucket with owner-folder policies, provisioned by the same schema script.
 - **Transaction history:** investor activity reads confirmed/finalized rows from `indexed_transactions`; a trusted server-side indexer must write these records.
-- **AI Gateway:** readiness checklist generation from an authenticated server function.
+- **Readiness AI:** checklist generation through an OpenAI Responses API-compatible endpoint called only from an authenticated server function.
 - **Solana Devnet / Anchor:** program config and pool/proposal reads, proposal submission, approved-pool creation, and USDC contributions through Phantom or Solflare.
 
 ### Not yet provisioned
@@ -161,9 +161,12 @@ VITE_SUPABASE_URL=
 VITE_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_URL=
 SUPABASE_PUBLISHABLE_KEY=
+READINESS_AI_API_URL=https://api.openai.com/v1/responses
+READINESS_AI_API_KEY=
+READINESS_AI_MODEL=gpt-4.1-mini
 ```
 
-Use the project’s publishable key only. Never commit `.env` or put a service-role key in client-side variables.
+The readiness AI settings are optional; the endpoint must support the OpenAI Responses API structured-output format. Keep `READINESS_AI_API_KEY` server-only and do not prefix it with `VITE_` or `NEXT_PUBLIC_`. Use the project’s publishable Supabase key only. Never commit `.env` or put a service-role key in client-side variables.
 
 ## Quality checks
 
