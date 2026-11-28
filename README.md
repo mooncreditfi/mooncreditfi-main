@@ -12,6 +12,21 @@ Rather than treating funding as a simple transfer of money, MoonCreditFi creates
 
 **Built on Solana · Anchor Framework · React · TanStack Start · Supabase**
 
+## Watch MoonCreditFi
+
+<table>
+<tr>
+<td align="center">
+<a href="https://youtu.be/iS4JSzSUf7g">
+<img src="https://img.youtube.com/vi/iS4JSzSUf7g/hqdefault.jpg" alt="MoonCreditFi project video thumbnail; click to watch on YouTube" width="100%">
+</a>
+<br>
+<strong>MoonCreditFi Project Overview</strong><br>
+Watch the project video on YouTube.
+</td>
+</tr>
+</table>
+
 ---
 
 ## The Problem
