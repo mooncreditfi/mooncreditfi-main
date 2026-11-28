@@ -27,6 +27,37 @@ Watch the project video on YouTube.
 </tr>
 </table>
 
+## Product Screenshots
+
+These screenshots show the MoonCreditFi application connected to Solana Devnet. Devnet tokens have no real-world value.
+
+<table>
+<tr>
+<td align="center">
+<a href="frontend/src/assets/Screenshot%202026-11-26%20205928.png">
+<img src="frontend/src/assets/Screenshot%202026-11-26%20205928.png" alt="MoonCreditFi funding pools overview showing live on-chain activity and funding totals" width="100%">
+</a>
+<p><strong>Funding pools</strong><br>Live pool counts, total raised, funding targets, and verified program details.</p>
+</td>
+</tr>
+<tr>
+<td align="center">
+<a href="frontend/src/assets/Screenshot%202026-11-26%20210028.png">
+<img src="frontend/src/assets/Screenshot%202026-11-26%20210028.png" alt="MoonCreditFi pool cards showing targets, contributions, funding progress, and contribution forms" width="100%">
+</a>
+<p><strong>Pool details and contributions</strong><br>Review funding progress and contribute USDC to an on-chain pool.</p>
+</td>
+</tr>
+<tr>
+<td align="center">
+<a href="frontend/src/assets/Screenshot%202026-11-25%20175942.png">
+<img src="frontend/src/assets/Screenshot%202026-11-25%20175942.png" alt="MoonCreditFi admin dashboard showing pending proposals and settlement approvals" width="100%">
+</a>
+<p><strong>Administration</strong><br>Platform administrators review proposals and settlements.</p>
+</td>
+</tr>
+</table>
+
 ---
 
 ## The Problem
