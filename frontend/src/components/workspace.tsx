@@ -6,6 +6,8 @@ import {
   ArrowUpRight,
   Building2,
   CircleAlert,
+  ChevronDown,
+  ChevronRight,
   FileCheck2,
   Handshake,
   LayoutDashboard,
@@ -14,6 +16,8 @@ import {
   Menu,
   Search,
   ShieldCheck,
+  Bell,
+  CircleUserRound,
   X,
 } from "lucide-react";
 import { SiSolana } from "react-icons/si";
@@ -53,10 +57,17 @@ export function Workspace({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const [roles, setRoles] = useState<MoonCreditRole[]>([]);
+  const [accountName, setAccountName] = useState("Account");
+  const [accountEmail, setAccountEmail] = useState("");
   const [AuthorityAdminLink, setAuthorityAdminLink] = useState<ComponentType | null>(null);
   const location = useLocation();
   const walletRuntimeReady = useWalletRuntimeReady();
   const navigationRoles: MoonCreditRole[] = signedIn ? roles : ["investor", "entrepreneur"];
+  const entrepreneurWorkspace =
+    location.pathname === "/entrepreneur" ||
+    (location.pathname !== "/dashboard" &&
+      roles.includes("entrepreneur") &&
+      !roles.includes("investor"));
   useEffect(() => {
     const {
       data: { subscription },
@@ -64,6 +75,8 @@ export function Workspace({ children }: { children: ReactNode }) {
       const profile = getMoonCreditProfile(session?.user ?? null);
       setSignedIn(Boolean(session?.user));
       setRoles(profile?.roles ?? []);
+      setAccountName(profile?.full_name || session?.user?.email || "Account");
+      setAccountEmail(profile?.email || session?.user?.email || "");
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -177,7 +190,6 @@ export function Workspace({ children }: { children: ReactNode }) {
               {open ? <X /> : <Menu />}
             </Button>
             <span className="network-badge">
-              <span />
               <SiSolana className="network-badge-icon" aria-hidden="true" />
               <span className="network-badge-label">Solana Devnet</span>
             </span>
@@ -185,15 +197,61 @@ export function Workspace({ children }: { children: ReactNode }) {
           <div className="workspace-header-actions">
             <WalletConnectButton requireAuthentication={!signedIn} showBalance />
             {signedIn && (
-              <Button
-                variant="wallet"
-                className="workspace-sign-out"
-                aria-label="Sign out"
-                onClick={() => void signOut()}
-              >
-                <LogOut />
-                Sign out
-              </Button>
+              <>
+                {entrepreneurWorkspace ? (
+                  <Link
+                    to="/entrepreneur"
+                    search={{ view: "notifications" }}
+                    className="workspace-icon-link"
+                    aria-label="Entrepreneur notifications"
+                  >
+                    <Bell aria-hidden="true" />
+                  </Link>
+                ) : (
+                  <Link
+                    to="/dashboard"
+                    search={{ view: "notifications" }}
+                    className="workspace-icon-link"
+                    aria-label="Investor notifications"
+                  >
+                    <Bell aria-hidden="true" />
+                  </Link>
+                )}
+                <details className="workspace-account-menu">
+                  <summary aria-label="Open account menu">
+                    <CircleUserRound aria-hidden="true" />
+                    <span className="workspace-account-copy">
+                      <strong>{accountName}</strong>
+                      <small>{accountEmail}</small>
+                    </span>
+                    <ChevronDown className="workspace-account-chevron" aria-hidden="true" />
+                  </summary>
+                  <div className="workspace-account-panel">
+                    {entrepreneurWorkspace ? (
+                      <>
+                        <Link to="/entrepreneur" search={{ view: "profile" }}>
+                          <CircleUserRound aria-hidden="true" /> Profile
+                        </Link>
+                        <Link to="/entrepreneur" search={{ view: "settings" }}>
+                          <ShieldCheck aria-hidden="true" /> Settings
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link to="/dashboard" search={{ view: "profile" }}>
+                          <CircleUserRound aria-hidden="true" /> Profile
+                        </Link>
+                        <Link to="/dashboard" search={{ view: "settings" }}>
+                          <ShieldCheck aria-hidden="true" /> Settings
+                        </Link>
+                      </>
+                    )}
+                    <button type="button" onClick={() => void signOut()}>
+                      <LogOut aria-hidden="true" /> Sign out
+                    </button>
+                  </div>
+                </details>
+              </>
             )}
           </div>
         </header>
@@ -229,6 +287,17 @@ export function WorkspaceTitle({
   return (
     <div className={`workspace-title ${className ?? ""}`.trim()}>
       <div>
+        <nav className="workspace-breadcrumbs" aria-label="Breadcrumb">
+          <ol>
+            <li>
+              <Link to="/">MoonCreditFi</Link>
+            </li>
+            <li aria-hidden="true">
+              <ChevronRight />
+            </li>
+            <li aria-current="page">{eyebrow}</li>
+          </ol>
+        </nav>
         <p className="eyebrow">{eyebrow}</p>
         <h1>{title}</h1>
         <p>{description}</p>
